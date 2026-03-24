@@ -42,7 +42,7 @@ unset($_SESSION['authError']);
           </div>
         <?php endif; ?>
 
-        <form method="POST" action="/php/function/login.php" class="space-y-5">
+        <form method="POST" action="../php/function/login.php" class="space-y-5">
 
           <!-- Email -->
           <div>
