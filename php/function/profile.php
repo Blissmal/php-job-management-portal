@@ -25,6 +25,20 @@ if ($role === 'seeker') {
     $location  = trim($_POST['location'] ?? '');
     $bio       = trim($_POST['bio'] ?? '');
 
+    // Validate all required fields
+    $errors = [];
+    if (empty($full_name)) $errors[] = 'Full name is required.';
+    if (empty($headline)) $errors[] = 'Professional headline is required.';
+    if (empty($skills)) $errors[] = 'Skills are required.';
+    if (empty($location)) $errors[] = 'Location is required.';
+    if (empty($bio)) $errors[] = 'Bio is required.';
+
+    if ($errors) {
+        $_SESSION['error'] = implode(' ', $errors);
+        header('Location: ' . BASE_URL . '/seeker/profile');
+        exit;
+    }
+
     // Handle resume upload
     $resume_path = null;
     if (!empty($_FILES['resume']['name'])) {
@@ -39,7 +53,7 @@ if ($role === 'seeker') {
 
         if (!in_array($mime, $allowed_mime) || $size > 10 * 1024 * 1024) {
             $_SESSION['error'] = 'Invalid file. PDF/DOC/DOCX only, max 10 MB.';
-            header('Location: ' . BASE_URL . '/profile');
+            header('Location: ' . BASE_URL . '/seeker/profile');
             exit;
         }
 
@@ -68,33 +82,60 @@ if ($role === 'seeker') {
         move_uploaded_file($_FILES['resume']['tmp_name'], $dest);
 
         $db->prepare(
-            "UPDATE job_seeker_profiles
-             SET full_name = ?, headline = ?, skills = ?, location = ?, bio = ?, resume_path = ?
-             WHERE user_id = ?"
-        )->execute([$full_name, $headline, $skills, $location, $bio, $resume_path, $uid]);
-
+            "INSERT INTO job_seeker_profiles (user_id, full_name, headline, skills, location, bio, resume_path)
+             VALUES (?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+             full_name = ?, headline = ?, skills = ?, location = ?, bio = ?, resume_path = ?"
+        )->execute([$uid, $full_name, $headline, $skills, $location, $bio, $resume_path, $full_name, $headline, $skills, $location, $bio, $resume_path]);
     } else {
-        // No new resume uploaded — leave existing resume_path untouched
-        $db->prepare(
-            "UPDATE job_seeker_profiles
-             SET full_name = ?, headline = ?, skills = ?, location = ?, bio = ?
-             WHERE user_id = ?"
-        )->execute([$full_name, $headline, $skills, $location, $bio, $uid]);
-    }
+        // Check if resume already exists
+        $stmt = $db->prepare("SELECT resume_path FROM job_seeker_profiles WHERE user_id = ?");
+        $stmt->execute([$uid]);
+        $existing = $stmt->fetch();
 
+        if (!$existing || !$existing['resume_path']) {
+            $_SESSION['error'] = 'Resume is required.';
+            header('Location: ' . BASE_URL . '/seeker/profile');
+            exit;
+        }
+
+        $db->prepare(
+            "INSERT INTO job_seeker_profiles (user_id, full_name, headline, skills, location, bio)
+             VALUES (?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE
+             full_name = ?, headline = ?, skills = ?, location = ?, bio = ?"
+        )->execute([$uid, $full_name, $headline, $skills, $location, $bio, $full_name, $headline, $skills, $location, $bio]);
+    }
 } elseif ($role === 'employer') {
     $company_name = trim($_POST['company_name'] ?? '');
     $industry     = trim($_POST['industry'] ?? '');
     $website      = trim($_POST['website'] ?? '');
     $description  = trim($_POST['description'] ?? '');
 
+    // Validate all required fields
+    $errors = [];
+    if (empty($company_name)) $errors[] = 'Company name is required.';
+    if (empty($industry)) $errors[] = 'Industry is required.';
+    if (empty($website)) $errors[] = 'Website is required.';
+    if (empty($description)) $errors[] = 'Description is required.';
+
+    if ($errors) {
+        $_SESSION['error'] = implode(' ', $errors);
+        header('Location: ' . BASE_URL . '/employer/profile');
+        exit;
+    }
+
     $db->prepare(
-        "UPDATE employer_profiles
-         SET company_name = ?, industry = ?, website = ?, description = ?
-         WHERE user_id = ?"
-    )->execute([$company_name, $industry, $website, $description, $uid]);
+        "INSERT INTO employer_profiles (user_id, company_name, industry, website, description)
+         VALUES (?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+         company_name = ?, industry = ?, website = ?, description = ?"
+    )->execute([$uid, $company_name, $industry, $website, $description, $company_name, $industry, $website, $description]);
 }
 
-$_SESSION['success'] = 'Profile updated.';
-header('Location: ' . BASE_URL . '/profile');
+$_SESSION['success'] = 'Profile completed! Redirecting to dashboard...';
+
+// Redirect based on role
+$redirect = ($role === 'seeker') ? '/seeker/profile' : '/employer/profile';
+header('Location: ' . BASE_URL . $redirect);
 exit;

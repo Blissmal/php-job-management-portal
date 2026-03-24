@@ -9,9 +9,9 @@ if (file_exists($connectionPath)) {
 }
 
 // Fetch user name for nav if logged in
-$navUserName = $_SESSION['currentUserName'] ?? null;
-$navUserRole = $_SESSION['currentUserRole'] ?? null;
-$navUserId   = $_SESSION['currentUser']     ?? null;
+$navUserId   = $_SESSION['user_id'] ?? null;
+$navUserRole = $_SESSION['role'] ?? null;
+$navUserName = $_SESSION['email'] ?? null;
 
 // Navigation links
 $navLinks = [
@@ -24,35 +24,41 @@ $navLinks = [
 $iconClass = 'w-3 h-3 inline-block mr-1 align-middle';
 
 // Auth links – now with separate icon and text for responsive hiding
-$authLinks = $navUserId
-  ? [
-    [
-      'icon'    => 'log-out',
-      'text'    => 'Sign out',
-      'href'    => '/logout',
-      'variant' => 'ghost',
-    ],
-  ]
-  : [
-    [
-      'icon'    => 'plus',
-      'text'    => 'Post A job',
-      'href'    => '/post-a-job',
-      'variant' => 'primary',
-    ],
-    [
-      'icon'    => 'key-round',
-      'text'    => 'Register',
-      'href'    => '/register',
-      'variant' => 'ghost',
-    ],
-    [
-      'icon'    => 'log-in',
-      'text'    => 'Login',
-      'href'    => '/login',
-      'variant' => 'ghost',
-    ],
+$authLinks = [];
+
+// Show "Post a Job" for employers and non-logged-in users
+if (!$navUserId || $navUserRole === 'employer') {
+  $authLinks[] = [
+    'icon'    => 'plus',
+    'text'    => 'Post A job',
+    'href'    => '/post-a-job',
+    'variant' => 'primary',
   ];
+}
+
+// Show logout if logged in
+if ($navUserId) {
+  $authLinks[] = [
+    'icon'    => 'log-out',
+    'text'    => 'Sign out',
+    'href'    => '/logout',
+    'variant' => 'ghost',
+  ];
+} else {
+  // Show register and login if not logged in
+  $authLinks[] = [
+    'icon'    => 'key-round',
+    'text'    => 'Register',
+    'href'    => '/register',
+    'variant' => 'ghost',
+  ];
+  $authLinks[] = [
+    'icon'    => 'log-in',
+    'text'    => 'Login',
+    'href'    => '/login',
+    'variant' => 'ghost',
+  ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,6 +76,11 @@ $authLinks = $navUserId
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+  <!-- SweetAlert2 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
   <style type="text/tailwindcss">
     /* ─── Site theme ─────────────────────────────────────────── */
@@ -179,15 +190,10 @@ $authLinks = $navUserId
         <!-- Right side: Actions -->
         <div class="flex items-center gap-1">
           <?php if ($navUserId): ?>
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                <?php echo strtoupper(substr($navUserName, 0, 1)); ?>
-              </div>
-              <div class="hidden md:block">
-                <div class="nav-username font-medium text-sm"><?php echo htmlspecialchars($navUserName); ?></div>
-                <div class="nav-role text-xs"><?php echo ucfirst(str_replace('_', ' ', $navUserRole)); ?></div>
-              </div>
-            </div>
+            <a href="<?php echo $navUserRole === 'seeker' ? '/seeker/dashboard' : ($navUserRole === 'admin' ? '/admin/dashboard' : '/dashboard'); ?>" class="nav-action flex items-center gap-1">
+              <i data-lucide="user-round" class="w-5 h-5" aria-hidden="true"></i>
+              <span class="hidden md:inline">Dahboard</span>
+            </a>
           <?php endif; ?>
 
           <?php foreach ($authLinks as $link): ?>

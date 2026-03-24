@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/connection.php';
+require_once __DIR__ . '/../config/profile_guard.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -11,7 +12,7 @@ $email = trim($_POST['email'] ?? '');
 $pass  = $_POST['password'] ?? '';
 
 if (empty($email) || empty($pass)) {
-    $_SESSION['error'] = 'Email and password are required.';
+    $_SESSION['authError'] = 'Email and password are required.';
     header('Location: ' . BASE_URL . '/login');
     exit;
 }
@@ -22,13 +23,13 @@ $stmt->execute([$email]);
 $user = $stmt->fetch();
 
 if (!$user || !password_verify($pass, $user['password_hash'])) {
-    $_SESSION['error'] = 'Invalid email or password.';
+    $_SESSION['authError'] = 'Invalid email or password.';
     header('Location: ' . BASE_URL . '/login');
     exit;
 }
 
 if ($user['status'] !== 'active') {
-    $_SESSION['error'] = 'Your account has been deactivated. Contact admin.';
+    $_SESSION['authError'] = 'Your account has been deactivated. Please contact the administrator.';
     header('Location: ' . BASE_URL . '/login');
     exit;
 }
@@ -41,5 +42,21 @@ $_SESSION['role']    = $user['role'];
 $_SESSION['status']  = $user['status'];
 $_SESSION['email']   = $email;
 
-header('Location: ' . BASE_URL . '/dashboard');
+// Check if profile is complete
+if (!isProfileComplete()) {
+    // Redirect to appropriate profile page
+    $profileRedirect = ($user['role'] === 'seeker') ? '/seeker/profile' : '/employer/profile';
+    header('Location: ' . BASE_URL . $profileRedirect);
+    exit;
+}
+
+// Redirect to appropriate dashboard
+$dashboardRedirect = match ($user['role']) {
+    'seeker' => '/seeker/dashboard',
+    'employer' => '/employer/dashboard',
+    'admin' => '/admin/dashboard',
+    default => '/dashboard'
+};
+
+header('Location: ' . BASE_URL . $dashboardRedirect);
 exit;

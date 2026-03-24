@@ -32,7 +32,7 @@ if ($action === 'create' || $action === 'edit') {
 
     if (empty($title) || empty($description)) {
         $_SESSION['error'] = 'Title and description are required.';
-        header('Location: ' . BASE_URL . '/job-create');
+        header('Location: ' . BASE_URL . '/post-a-job');
         exit;
     }
 
@@ -42,7 +42,7 @@ if ($action === 'create' || $action === 'edit') {
         $cat_chk->execute([$category_id]);
         if (!$cat_chk->fetch()) {
             $_SESSION['error'] = 'Invalid category selected.';
-            header('Location: ' . BASE_URL . '/job-create');
+            header('Location: ' . BASE_URL . '/post-a-job');
             exit;
         }
     }

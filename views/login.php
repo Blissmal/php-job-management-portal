@@ -34,15 +34,7 @@ unset($_SESSION['authError']);
 
       <!-- Card Body -->
       <div class="px-8 py-6">
-
-        <?php if ($authError): ?>
-          <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm">
-            <span class="mt-0.5 text-base">⚠</span>
-            <span><?php echo htmlspecialchars($authError); ?></span>
-          </div>
-        <?php endif; ?>
-
-        <form method="POST" action="/php/function/login.php" class="space-y-5">
+        <form method="POST" action="../php/function/login.php" class="space-y-5">
 
           <!-- Email -->
           <div>
@@ -113,3 +105,23 @@ unset($_SESSION['authError']);
 </section>
 
 <?php include_once 'partials/footer.php'; ?>
+
+
+
+<?php if ($authError): ?>
+  <script>
+    Swal.fire({
+      icon: 'error',
+      title: 'Login Failed',
+      text: '<?php echo addslashes($authError); ?>',
+      confirmButtonColor: '#198754',
+      confirmButtonText: 'Try Again',
+      background: '#fff',
+      customClass: {
+        popup: 'rounded-2xl',
+        title: 'text-lg font-semibold',
+        confirmButton: 'px-6 py-2 text-sm'
+      }
+    });
+  </script>
+<?php endif; ?>
