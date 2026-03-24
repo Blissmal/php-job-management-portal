@@ -1,0 +1,10 @@
+vendor/
+node_modules/
+.git
+.env
+docker-compose.*.yml
+README.md
+*.md
+.DS_Store
+/.idea
+/.vscode
