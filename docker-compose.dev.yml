@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    image: sse2304_app:dev
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: authentication_system
+      DB_USER: root
+      DB_PASS: root
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - sse-net
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: authentication_system
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - sse-net
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - db
+    networks:
+      - sse-net
+
+volumes:
+  db_data:
+
+networks:
+  sse-net:

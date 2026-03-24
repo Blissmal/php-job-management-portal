@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: .
+    image: sse2304_app:latest
+    ports:
+      - "80:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: authentication_system
+      DB_USER: root
+      DB_PASS: root
+    depends_on:
+      - db
+    restart: always
+    networks:
+      - sse-net
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-authentication_system}
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    networks:
+      - sse-net
+
+volumes:
+  db_data:
+
+networks:
+  sse-net:
