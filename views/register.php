@@ -4,8 +4,10 @@ if (isset($_SESSION["currentUser"])) {
   header('Location: /dashboard');
   exit;
 }
-$authError = $_SESSION['authError'] ?? null;
-unset($_SESSION['authError']);
+$error = $_SESSION['error'] ?? null;
+$success = $_SESSION['success'] ?? null;
+unset($_SESSION['error']);
+unset($_SESSION['success']);
 ?>
 
 <!-- Hero Banner -->
@@ -34,15 +36,7 @@ unset($_SESSION['authError']);
 
       <!-- Card Body -->
       <div class="px-8 py-6">
-
-        <?php if ($authError): ?>
-          <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm">
-            <span class="mt-0.5 text-base">⚠</span>
-            <span><?php echo htmlspecialchars($authError); ?></span>
-          </div>
-        <?php endif; ?>
-
-        <form method="POST" action="/php/function/register.php" id="regForm" class="space-y-5">
+        <form method="POST" action="../php/function/register.php" id="regForm" class="space-y-5">
 
           <!-- Email -->
           <div>
@@ -259,3 +253,43 @@ unset($_SESSION['authError']);
     });
   });
 </script>
+
+<?php if ($error): ?>
+  <script>
+    Swal.fire({
+      icon: 'error',
+      title: 'Registration Failed',
+      text: '<?php echo addslashes($error); ?>',
+      confirmButtonColor: '#198754',
+      confirmButtonText: 'Try Again',
+      background: '#fff',
+      customClass: {
+        popup: 'rounded-2xl',
+        title: 'text-lg font-semibold',
+        confirmButton: 'px-6 py-2 text-sm'
+      }
+    });
+  </script>
+<?php endif; ?>
+
+<?php if ($success): ?>
+  <script>
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: '<?php echo addslashes($success); ?>',
+      confirmButtonColor: '#198754',
+      confirmButtonText: 'Continue',
+      background: '#fff',
+      customClass: {
+        popup: 'rounded-2xl',
+        title: 'text-lg font-semibold',
+        confirmButton: 'px-6 py-2 text-sm'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        window.location.href = '/dashboard';
+      }
+    });
+  </script>
+<?php endif; ?>

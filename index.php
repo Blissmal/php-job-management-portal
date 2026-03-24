@@ -1,25 +1,28 @@
 <?php
-session_start();
 
+session_start();
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
-function requireAuth(): void {
-    if (empty($_SESSION['currentUser'])) {
+function requireAuth(): void
+{
+    if (empty($_SESSION['user_id'])) {
         header('Location: /login');
         exit;
     }
 }
 
-function requireGuest(): void {
-    if (!empty($_SESSION['currentUser'])) {
+function requireGuest(): void
+{
+    if (!empty($_SESSION['user_id'])) {
         header('Location: /dashboard');
         exit;
     }
 }
 
-function requireRole(string ...$roles): void {
+function requireRole(string ...$roles): void
+{
     requireAuth();
-    if (!in_array($_SESSION['currentUserRole'] ?? '', $roles, true)) {
+    if (!in_array($_SESSION['role'] ?? '', $roles, true)) {
         http_response_code(403);
         include_once 'views/403.php';
         exit;
@@ -45,7 +48,8 @@ $routes = [
     ['POST', '/login',          'php/functions/login.php',  'requireGuest'],
     ['GET',  '/register',       'views/register.php',       'requireGuest'],
     ['POST', '/register',       'php/functions/register.php', 'requireGuest'],
-    ['GET',  '/dashboard',      'views/dashboard.php',      'requireAuth'],
+    ['GET',  '/seeker/profile',      'views/seeker/profile.php',      'requireAuth'],
+    ['GET',  '/admin/profile',      'views/admin/profile.php',      'requireAuth'],
     ['GET',  '/logout',         'php/functions/logout.php', 'requireAuth'],
     ['GET',  '/index',          'views/login.php',          null],
     ['GET',  '/index.php',      'views/login.php',          null],
