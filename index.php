@@ -28,7 +28,7 @@ $request_url  = '/' . ltrim($request_url, '/');
 
 $routes = [
     '/login-post'             => ['php/function/login.php',                ['POST']],
-    '/logout'                 => ['php/config/logout.php',                 ['GET', 'POST']],
+    '/logout'                 => ['php/function/logout.php',                 ['GET', 'POST']],
     '/register-post'          => ['php/function/register_seeker.php',      ['POST']],
     '/register-employer-post' => ['php/function/register_employer.php',    ['POST']],
     '/profile-update'         => ['php/function/profile.php',              ['POST']],
