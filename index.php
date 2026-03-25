@@ -80,6 +80,8 @@ $routes = [
     ['GET',  '/seeker/applications',      'views/seeker/applications.php',      'requireSeekerWithProfile'],
     ['GET',  '/seeker/profile',      'views/seeker/profile.php',      'requireSeeker'],
     ['GET',  '/employer/dashboard',      'views/employer/dashboard.php',      'requireEmployerWithProfile'],
+    ['GET',  '/employer/jobs',           'views/employer/jobs.php',           'requireEmployerWithProfile'],
+    ['GET',  '/employer/applications',   'views/employer/applications.php',   'requireEmployerWithProfile'],
     ['GET',  '/employer/profile',      'views/employer/profile.php',      'requireEmployer'],
     ['GET',  '/admin/profile',      'views/admin/profile.php',      'requireAuth'],
     ['GET',  '/logout',         'php/functions/logout.php', 'requireAuth'],

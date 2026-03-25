@@ -29,7 +29,7 @@ include_once __DIR__ . '/../partials/header.php';
 ?>
 
 <!-- Hero Banner -->
-<section class="relative w-full overflow-hidden" style="height:200px;">
+<section class="relative w-full overflow-hidden" style="height:280px;">
     <div class="absolute inset-0" style="background: linear-gradient(135deg, #8b91dd 0%, #10195d 70%, #10195d 100%); opacity:0.92;"></div>
     <div class="absolute inset-0 flex flex-col items-center justify-center z-10">
         <h1 class="text-2xl md:text-3xl font-bold text-white mb-2 tracking-tight text-center">Saved Jobs</h1>
