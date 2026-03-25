@@ -278,3 +278,31 @@ SET location = CASE company_name
     WHEN 'AA Growers' THEN 'Timau'
     ELSE location
 END;
+
+-- Career/Experience Level
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS experience_level 
+    ENUM('Entry Level','Mid Level','Senior','Lead','Manager','Executive','Not specified') 
+    DEFAULT 'Not specified' 
+    AFTER job_type;
+ 
+-- Required Qualification
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS required_qualification 
+    ENUM('High School','Diploma','Bachelor Degree','Master Degree','PhD','Certification','Not specified') 
+    DEFAULT 'Not specified'
+    AFTER experience_level;
+ 
+-- Years of Experience Required
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS years_experience_min INT DEFAULT 0 AFTER required_qualification;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS years_experience_max INT DEFAULT 0 AFTER years_experience_min;
+ 
+-- Salary Currency (for international support)
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS salary_currency VARCHAR(3) DEFAULT 'KES' AFTER salary_max;
+ 
+-- ============================================================
+-- UPDATE INDEXES
+-- ============================================================
+ 
+ALTER TABLE jobs ADD INDEX IF NOT EXISTS idx_experience_level (experience_level);
+ALTER TABLE jobs ADD INDEX IF NOT EXISTS idx_required_qualification (required_qualification);
+
+ALTER TABLE employer_profiles ADD COLUMN IF NOT EXISTS team_size ENUM('1-10','11-50','51-200','201-500','501-1000','1001-5000','5001-10000','10000+') DEFAULT NULL AFTER location;
