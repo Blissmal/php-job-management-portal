@@ -24,7 +24,7 @@ unset($_SESSION['success']);
 </section>
 
 <!-- Register Form -->
-<section class=" flex items-start justify-center">
+<section class="flex items-start justify-center py-14">
   <div class="w-full max-w-md mx-4 relative z-20">
     <div class="bg-white rounded-2xl ">
 

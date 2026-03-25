@@ -15,24 +15,39 @@ $navUserName = $_SESSION['email'] ?? null;
 
 // Navigation links
 $navLinks = [
-  ['label' => 'Home', 'href' => '/'],
-  ['label' => 'Jobs', 'href' => '/jobs'],
+  ['label' => 'Home',      'href' => '/'],
+  ['label' => 'Jobs',      'href' => '/jobs'],
   ['label' => 'Categories', 'href' => '/categories'],
   ['label' => 'Employers', 'href' => '/employers'],
 ];
 
 $iconClass = 'w-3 h-3 inline-block mr-1 align-middle';
 
-// Auth links – now with separate icon and text for responsive hiding
+// Auth links
 $authLinks = [];
 
 // Show "Post a Job" for employers and non-logged-in users
 if (!$navUserId || $navUserRole === 'employer') {
   $authLinks[] = [
     'icon'    => 'plus',
-    'text'    => 'Post A job',
+    'text'    => 'Post A Job',
     'href'    => '/post-a-job',
     'variant' => 'primary',
+  ];
+}
+
+// Dashboard link — rendered AFTER Post a Job
+if ($navUserId) {
+  $dashHref = match ($navUserRole) {
+    'seeker'   => '/seeker/dashboard',
+    'admin'    => '/admin/dashboard',
+    'employer'    => '/employer/dashboard',
+  };
+  $authLinks[] = [
+    'icon'    => 'layout-dashboard',
+    'text'    => 'Dashboard',
+    'href'    => $dashHref,
+    'variant' => 'ghost',
   ];
 }
 
@@ -68,7 +83,7 @@ if ($navUserId) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mboka Kenya</title>
 
-  <!-- Fonts: site fonts + footer Inter -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Quicksand:wght@300..700&family=Varela+Round&display=swap" rel="stylesheet">
@@ -77,13 +92,11 @@ if ($navUserId) {
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
-  <!-- SweetAlert2 CDN -->
+  <!-- SweetAlert2 -->
   <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
   <style type="text/tailwindcss">
-    /* ─── Site theme ─────────────────────────────────────────── */
     @theme {
       --font-montserrat:   "Montserrat",   ui-sans-serif;
       --font-quicksand:    "Quicksand",    ui-sans-serif;
@@ -91,7 +104,6 @@ if ($navUserId) {
       --font-inter:        "Inter",        ui-sans-serif;
       --font-sans: var(--font-montserrat), var(--font-quicksand), var(--font-varela-round);
 
-      /* ─── Footer colour tokens ──────────────────────────────── */
       --color-footer-bg:     #1a2332;
       --color-footer-dark:   #141d2b;
       --color-footer-border: #243044;
@@ -100,9 +112,6 @@ if ($navUserId) {
       --color-ck-pink:       #fb236a;
     }
 
-    /* ─── Global layout ──────────────────────────────────────── */
-
-    /* ─── Navbar drawer transitions ──────────────────────────── */
     .drawer {
       transition: transform 0.3s ease-in-out;
       transform: translateX(-100%);
@@ -120,22 +129,15 @@ if ($navUserId) {
       pointer-events: auto;
     }
 
-    /* ─── Footer ─────────────────────────────────────────────── */
-
-    /* Textured dark background with subtle radial gradients */
     .footer-bg-texture {
       background-color: #1a2332;
       background-image:
         radial-gradient(ellipse at 20% 50%, rgba(232,20,77,0.04) 0%, transparent 60%),
         radial-gradient(ellipse at 80% 20%, rgba(30,60,100,0.15) 0%, transparent 50%);
     }
-
-    /* Slightly darker strip for the copyright bar */
     .footer-bottom-bg {
       background-color: #131c29;
     }
-
-    /* Pink › arrow before every nav link */
     .footer-nav-arrow::before {
       content: '›';
       margin-right: 8px;
@@ -144,8 +146,6 @@ if ($navUserId) {
       font-weight: 700;
       line-height: 1;
     }
-
-    /* Newsletter input */
     .footer-email-input::placeholder {
       color: #5a6e8a;
     }
@@ -160,25 +160,25 @@ if ($navUserId) {
 <body class="font-varela-round h-full min-h-screen flex flex-col">
 
   <!-- Navbar -->
-  <header class=" flex items-center justify-center max-w-7xl">
-
-
-    <nav id="siteNav" class="flex items-center justify-center fixed top-0 left-0 right-0 w-full h-16 transition-all duration-300 ease-in-out z-50 bg-transparent text-white ">
+  <header class="flex items-center justify-center max-w-7xl">
+    <nav id="siteNav" class="flex items-center justify-center fixed top-0 left-0 right-0 w-full h-16 transition-all duration-300 ease-in-out z-50 bg-transparent text-white">
       <div class="max-w-7xl w-full px-4 flex items-center justify-between h-full">
 
-        <!-- Left: Hamburger (visible on mobile) -->
+        <!-- Hamburger (mobile) -->
         <button id="menuToggle" class="md:hidden text-current focus:outline-none" aria-label="Menu">
           <i data-lucide="menu" class="w-6 h-6"></i>
         </button>
 
-        <!-- Logo (centered on mobile, left on larger screens) -->
-        <a href="<?php echo $navUserId ? '/dashboard' : '/'; ?>" class="nav-logo font-bold text-2xl transition-colors flex items-center justify-center gap-2  left-1/2 transform max-md:-translate-x-1/2 md:static md:transform-none">
+        <!-- Logo -->
+        <a href="<?php echo  '/'; ?>"
+          class="nav-logo font-bold text-2xl transition-colors flex items-center justify-center gap-2
+                  left-1/2 transform max-md:-translate-x-1/2 md:static md:transform-none">
           <i data-lucide="briefcase" class="w-8 h-8 text-[#fb236a]" aria-hidden="true"></i>
           <span class="hidden md:inline">MBOKA KENYA</span>
           <span class="md:hidden">MK</span>
         </a>
 
-        <!-- Center Navigation Links (hidden on mobile, shown in drawer) -->
+        <!-- Center nav links -->
         <div class="hidden md:flex items-center gap-8">
           <?php foreach ($navLinks as $link): ?>
             <a href="<?php echo $link['href']; ?>" class="nav-link font-medium text-sm transition-colors">
@@ -187,27 +187,21 @@ if ($navUserId) {
           <?php endforeach; ?>
         </div>
 
-        <!-- Right side: Actions -->
+        <!-- Right side: Post a Job → Dashboard → Sign out (or Register / Login) -->
         <div class="flex items-center gap-1">
-          <?php if ($navUserId): ?>
-            <a href="<?php echo $navUserRole === 'seeker' ? '/seeker/dashboard' : ($navUserRole === 'admin' ? '/admin/dashboard' : '/dashboard'); ?>" class="nav-action flex items-center gap-1">
-              <i data-lucide="user-round" class="w-5 h-5" aria-hidden="true"></i>
-              <span class="hidden md:inline">Dahboard</span>
-            </a>
-          <?php endif; ?>
-
-          <?php foreach ($authLinks as $link): ?>
-            <?php
+          <?php foreach ($authLinks as $link):
             $isPrimary = $link['variant'] === 'primary';
-            $classes = 'flex items-center gap-1 p-2 rounded-md font-medium text-sm transition-all ';
-            $classes .= $isPrimary ? 'bg-[#fb236a] text-white hover:bg-[#fb236a]/80 px-4' : '';
-            ?>
-            <a href="<?php echo $link['href']; ?>" class="nav-action <?php echo $isPrimary ? 'primary-action' : ''; ?> <?php echo $classes; ?>">
+            $classes   = 'flex items-center gap-1 p-2 rounded-md font-medium text-sm transition-all ';
+            $classes  .= $isPrimary ? 'bg-[#fb236a] text-white hover:bg-[#fb236a]/80 px-4' : '';
+          ?>
+            <a href="<?php echo $link['href']; ?>"
+              class="nav-action <?php echo $isPrimary ? 'primary-action' : ''; ?> <?php echo $classes; ?>">
               <i data-lucide="<?php echo $link['icon']; ?>" class="w-5 h-5" aria-hidden="true"></i>
               <span class="hidden md:inline"><?php echo $link['text']; ?></span>
             </a>
           <?php endforeach; ?>
         </div>
+
       </div>
     </nav>
   </header>
@@ -237,15 +231,23 @@ if ($navUserId) {
     <ul class="space-y-3">
       <?php foreach ($navLinks as $link): ?>
         <li>
-          <a href="<?php echo $link['href']; ?>" class="drawer-link block py-2 text-gray-700 hover:text-[#fb236a] transition-colors">
+          <a href="<?php echo $link['href']; ?>"
+            class="drawer-link block py-2 text-gray-700 hover:text-[#fb236a] transition-colors">
             <?php echo $link['label']; ?>
+          </a>
+        </li>
+      <?php endforeach; ?>
+      <?php foreach ($authLinks as $link): ?>
+        <li>
+          <a href="<?php echo $link['href']; ?>"
+            class="drawer-link flex items-center gap-2 py-2 text-gray-700 hover:text-[#fb236a] transition-colors">
+            <i data-lucide="<?php echo $link['icon']; ?>" class="w-4 h-4"></i>
+            <?php echo $link['text']; ?>
           </a>
         </li>
       <?php endforeach; ?>
     </ul>
   </div>
-
-
 
   <script>
     $(document).ready(function() {
@@ -257,13 +259,15 @@ if ($navUserId) {
 
       function updateNavOnScroll() {
         if ($(window).scrollTop() > 100) {
-          $nav.addClass('bg-white shadow-[0_2px_5px_rgba(32,32,32,.1)]').removeClass('bg-transparent text-white').addClass('text-gray-700');
+          $nav.addClass('bg-white shadow-[0_2px_5px_rgba(32,32,32,.1)]')
+            .removeClass('bg-transparent text-white').addClass('text-gray-700');
           $logo.addClass('text-gray-900').removeClass('text-white');
           $navLinks.addClass('text-gray-700 hover:text-gray-900').removeClass('text-white hover:text-white/90');
           $userTexts.addClass('text-gray-900').removeClass('text-white');
           $actionLinks.addClass('text-gray-700 hover:text-gray-900').removeClass('text-white hover:text-white/90');
         } else {
-          $nav.removeClass('bg-white shadow-[0_2px_5px_rgba(32,32,32,.1)]').addClass('bg-transparent text-white').removeClass('text-gray-700');
+          $nav.removeClass('bg-white shadow-[0_2px_5px_rgba(32,32,32,.1)]')
+            .addClass('bg-transparent text-white').removeClass('text-gray-700');
           $logo.removeClass('text-gray-900').addClass('text-white');
           $navLinks.removeClass('text-gray-700 hover:text-gray-900').addClass('text-white hover:text-white/90');
           $userTexts.removeClass('text-gray-900').addClass('text-white');

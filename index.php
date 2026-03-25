@@ -44,6 +44,11 @@ function requireEmployer(): void
     requireRole('employer');
 }
 
+function requireAdmin(): void
+{
+    requireRole('admin');
+}
+
 function requireSeekerWithProfile(): void
 {
     requireSeeker();
@@ -65,6 +70,7 @@ function requireEmployerWithProfile(): void
 
 $routes = [
     ['GET',  '/',               'views/home.php',           null],
+    ['GET',  '/dashboard',      null,                       'handleDashboardRedirect'],
     ['GET',  '/jobs',           'views/jobs.php',           null],
     ['GET',  '/categories',           'views/categories.php',           null],
     ['GET',  '/jobs/:id',       'views/job-single.php',     null],
@@ -80,7 +86,15 @@ $routes = [
     ['GET',  '/seeker/applications',      'views/seeker/applications.php',      'requireSeekerWithProfile'],
     ['GET',  '/seeker/profile',      'views/seeker/profile.php',      'requireSeeker'],
     ['GET',  '/employer/dashboard',      'views/employer/dashboard.php',      'requireEmployerWithProfile'],
+    ['GET',  '/employer/jobs',           'views/employer/jobs.php',           'requireEmployerWithProfile'],
+    ['GET',  '/employer/applications',   'views/employer/applications.php',   'requireEmployerWithProfile'],
     ['GET',  '/employer/profile',      'views/employer/profile.php',      'requireEmployer'],
+    ['GET',  '/admin/dashboard',      'views/admin/dashboard.php',      'requireAdmin'],
+    ['GET',  '/admin/users',          'views/admin/users.php',          'requireAdmin'],
+    ['GET',  '/admin/employers',      'views/admin/employers.php',      'requireAdmin'],
+    ['GET',  '/admin/jobs',           'views/admin/jobs.php',           'requireAdmin'],
+    ['GET',  '/admin/applications',   'views/admin/applications.php',   'requireAdmin'],
+    ['GET',  '/admin/admins',         'views/admin/admins.php',         'requireAdmin'],
     ['GET',  '/admin/profile',      'views/admin/profile.php',      'requireAuth'],
     ['GET',  '/logout',         'php/functions/logout.php', 'requireAuth'],
 ];
@@ -135,3 +149,20 @@ if (!$matched) {
         include_once 'views/404.php';
     }
 }
+
+function handleDashboardRedirect(): void
+{
+    if (empty($_SESSION['user_id'])) {
+        header('Location: /login');
+        exit;
+    }
+    $role = $_SESSION['role'] ?? 'seeker';
+    $path = match ($role) {
+        'admin'    => '/admin/dashboard',
+        'employer' => '/employer/dashboard',
+        default    => '/seeker/dashboard',
+    };
+    header("Location: $path");
+    exit;
+}
+
