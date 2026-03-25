@@ -53,7 +53,7 @@ $error = $_SESSION['error'] ?? null;
 $success = $_SESSION['success'] ?? null;
 unset($_SESSION['error'], $_SESSION['success']);
 
-include_once 'partials/header.php';
+include_once 'views/partials/header.php';
 ?>
 
 <!-- Hero Banner -->
@@ -544,4 +544,4 @@ include_once 'partials/header.php';
     }, 100);
 </script>
 
-<?php include_once 'partials/footer.php'; ?>
+<?php include_once 'views/partials/footer.php'; ?>
