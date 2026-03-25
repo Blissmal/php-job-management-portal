@@ -42,8 +42,8 @@ $_SESSION['role']    = $user['role'];
 $_SESSION['status']  = $user['status'];
 $_SESSION['email']   = $email;
 
-// Check if profile is complete
-if (!isProfileComplete()) {
+// Check if profile is complete (skip for admin)
+if ($_SESSION['role'] !== 'admin' && !isProfileComplete()) {
     // Redirect to appropriate profile page
     $profileRedirect = ($user['role'] === 'seeker') ? '/seeker/profile' : '/employer/profile';
     header('Location: ' . BASE_URL . $profileRedirect);

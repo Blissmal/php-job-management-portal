@@ -42,7 +42,15 @@ if ($userRole === 'seeker') {
     ['icon' => 'layout-dashboard', 'label' => 'Dashboard',       'href' => '/employer/dashboard', 'badge' => null],
     ['icon' => 'briefcase',        'label' => 'Posted Jobs',      'href' => '/employer/jobs', 'badge' => null],
     ['icon' => 'users',            'label' => 'Applications',     'href' => '/employer/applications', 'badge' => null],
-    ['icon' => 'building',         'label' => 'Company Profile',  'href' => '/employer/profile', 'badge' => null],
+  ];
+} elseif ($userRole === 'admin') {
+  $sidebarMenu = [
+    ['icon' => 'layout-dashboard', 'label' => 'Dashboard',  'href' => '/admin/dashboard', 'badge' => null],
+    ['icon' => 'users',            'label' => 'Users',      'href' => '/admin/users', 'badge' => null],
+    ['icon' => 'shield',           'label' => 'Admins',     'href' => '/admin/admins', 'badge' => null],
+    ['icon' => 'building',         'label' => 'Employers',  'href' => '/admin/employers', 'badge' => null],
+    ['icon' => 'briefcase',        'label' => 'All Jobs',   'href' => '/admin/jobs', 'badge' => null],
+    ['icon' => 'file-text',        'label' => 'Apps',       'href' => '/admin/applications', 'badge' => null]
   ];
 }
 

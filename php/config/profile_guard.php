@@ -48,6 +48,10 @@ function isProfileComplete()
 
 function requireProfileComplete()
 {
+    if ($_SESSION['role'] === 'admin') {
+        return;
+    }
+
     if (!isProfileComplete()) {
         $role = $_SESSION['role'] ?? 'seeker';
         $_SESSION['profile_incomplete'] = true;
