@@ -1,4 +1,5 @@
 <?php
+
 /**
  * php/functions/ping.php
  * Health check endpoint that keeps the server and database awake
@@ -54,7 +55,6 @@ try {
             'server_timezone' => date_default_timezone_get()
         ]
     ], JSON_PRETTY_PRINT);
-
 } catch (Exception $e) {
     http_response_code(503);
     echo json_encode([
