@@ -150,6 +150,57 @@ try {
     include_once 'views/404.php';
     exit;
 }
+
+function renderMarkdown(string $text): string
+{
+    $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    $text = preg_replace('/^### (.+)$/m',  '<h3>$1</h3>', $text);
+    $text = preg_replace('/^## (.+)$/m',   '<h2>$1</h2>', $text);
+    $text = preg_replace('/^# (.+)$/m',    '<h2>$1</h2>', $text);
+
+    $text = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $text);
+    $text = preg_replace('/_(.+?)_/',       '<em>$1</em>',         $text);
+
+    $text = preg_replace('/^\d+\. (.+)$/m', '<li class="__ol">$1</li>', $text);
+    $text = preg_replace('/^[-*] (.+)$/m',  '<li class="__ul">$1</li>', $text);
+
+    $text = preg_replace_callback(
+        '/(<li class="__ol">.*?<\/li>\n?)+/s',
+        fn($m) => '<ol>' . str_replace(' class="__ol"', '', $m[0]) . '</ol>',
+        $text
+    );
+    $text = preg_replace_callback(
+        '/(<li class="__ul">.*?<\/li>\n?)+/s',
+        fn($m) => '<ul>' . str_replace(' class="__ul"', '', $m[0]) . '</ul>',
+        $text
+    );
+
+    $lines  = explode("\n", $text);
+    $output = '';
+    $buffer = '';
+
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+
+        if (preg_match('/^<(h[123456]|ul|ol|li)[\s>]/', $trimmed) || $trimmed === '') {
+            if ($buffer !== '') {
+                $output .= '<p>' . trim($buffer) . '</p>' . "\n";
+                $buffer  = '';
+            }
+            if ($trimmed !== '') $output .= $trimmed . "\n";
+        } else {
+            $buffer .= ($buffer ? ' ' : '') . $trimmed;
+        }
+    }
+
+    if ($buffer !== '') {
+        $output .= '<p>' . trim($buffer) . '</p>';
+    }
+
+    return $output;
+}
+
 ?>
 <?php include_once 'partials/header.php'; ?>
 
@@ -209,14 +260,8 @@ try {
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Job Description</h2>
 
                     <?php if ($job['description']): ?>
-                        <!-- Render description — strip_tags guards against raw HTML stored in DB -->
-                        <div class="text-sm text-gray-600 leading-relaxed space-y-3 mb-6">
-                            <?php
-                            // If description is plain text, preserve line breaks as paragraphs
-                            $paragraphs = array_filter(array_map('trim', explode("\n", $job['description'])));
-                            foreach ($paragraphs as $para): ?>
-                                <p><?php echo htmlspecialchars($para); ?></p>
-                            <?php endforeach; ?>
+                        <div class="job-description text-sm text-gray-700 leading-relaxed mb-6">
+                            <?= renderMarkdown($job['description']) ?>
                         </div>
                     <?php else: ?>
                         <p class="text-sm text-gray-400 italic mb-6">No description available for this role.</p>
@@ -303,5 +348,54 @@ try {
     </div>
 
 </main>
+
+<style>
+    .job-description h2 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-top: 1.25rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .job-description h3 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-top: 1rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .job-description p {
+        margin-bottom: 0.6rem;
+        color: #4b5563;
+    }
+
+    .job-description ul {
+        list-style: disc;
+        padding-left: 1.4rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .job-description ol {
+        list-style: decimal;
+        padding-left: 1.4rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .job-description li {
+        margin-bottom: 0.25rem;
+        color: #4b5563;
+    }
+
+    .job-description strong {
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .job-description em {
+        font-style: italic;
+    }
+</style>
 
 <?php include_once 'partials/footer.php'; ?>
