@@ -162,7 +162,7 @@ try {
                     </div>
 
                     <!-- Form Body -->
-                    <form method="POST" action="php/functions/apply.php" enctype="multipart/form-data" class="px-8 py-8 space-y-6">
+                    <form method="POST" action="/jobs/<?php echo (int)$job['job_id']; ?>/apply" enctype="multipart/form-data" class="px-8 py-8 space-y-6">
                         <input type="hidden" name="job_id" value="<?php echo (int)$job['job_id']; ?>">
 
                         <!-- Resume Upload -->

@@ -65,7 +65,7 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['profile_incomplete'])
             <!-- Card Body -->
             <div class="px-8 py-6">
                 <form method="POST"
-                    action="../../php/functions/profile.php"
+                    action="/seeker/profile"
                     enctype="multipart/form-data"
                     class="space-y-5">
 

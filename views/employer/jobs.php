@@ -85,7 +85,7 @@ include_once __DIR__ . '/../partials/header.php';
                                             <a href="/employer/jobs/<?php echo $job['job_id']; ?>/edit" class="p-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-50" title="Edit Job">
                                                 <i data-lucide="edit" class="w-4 h-4"></i>
                                             </a>
-                                            <form action="/php/functions/jobs.php" method="POST" class="inline">
+                                            <form action="/post-a-job" method="POST" class="inline">
                                                 <input type="hidden" name="job_id" value="<?php echo $job['job_id']; ?>">
                                                 <input type="hidden" name="action" value="<?php echo $job['status'] === 'open' ? 'close' : 'reopen'; ?>">
                                                 <button type="submit" class="p-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-50" title="<?php echo $job['status'] === 'open' ? 'Close Posting' : 'Reopen Posting'; ?>">

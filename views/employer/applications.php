@@ -113,7 +113,7 @@ include_once __DIR__ . '/../partials/header.php';
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex justify-end gap-2">
-                                            <form action="/php/functions/update_status.php" method="POST" class="inline">
+                                            <form action="/update-status" method="POST" class="inline">
                                                 <input type="hidden" name="app_id" value="<?php echo $app['app_id']; ?>">
                                                 <select name="status" onchange="this.form.submit()" class="text-xs border border-slate-200 rounded px-1.5 py-1 bg-white focus:outline-none">
                                                     <?php

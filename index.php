@@ -101,6 +101,10 @@ $routes = [
     ['GET',  '/admin/admins',         'views/admin/admins.php',         'requireAdmin'],
     ['GET',  '/admin/profile',      'views/admin/profile.php',      'requireAuth'],
     ['GET',  '/logout',         'php/functions/logout.php', 'requireAuth'],
+    ['POST', '/update-status',  'php/functions/update_status.php', 'requireEmployer'],
+    ['POST', '/admin/categories', 'php/functions/categories.php', 'requireAdmin'],
+    ['POST', '/seeker/profile', 'php/functions/profile.php', 'requireSeeker'],
+    ['POST', '/employer/profile', 'php/functions/profile.php', 'requireEmployer'],
 ];
 
 // ─── Dispatcher ────────────────────────────────────────────────────────────────

@@ -53,7 +53,7 @@ include_once 'partials/header.php';
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="../php/functions/jobs.php" enctype="multipart/form-data" id="jobForm">
+        <form method="POST" action="/post-a-job" enctype="multipart/form-data" id="jobForm">
             <input type="hidden" name="action" value="create">
 
             <!-- ════════════════════════════════════════════ -->

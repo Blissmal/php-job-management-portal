@@ -57,7 +57,7 @@ include_once 'partials/header.php';
                         <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
                             <h2 class="text-lg font-bold text-gray-900">Add Category</h2>
                         </div>
-                        <form method="POST" action="php/functions/categories.php" class="px-6 py-6 space-y-4">
+                        <form method="POST" action="/admin/categories" class="px-6 py-6 space-y-4">
                             <input type="hidden" name="action" value="create">
 
                             <div>
@@ -131,7 +131,7 @@ include_once 'partials/header.php';
                                                 </button>
 
                                                 <?php if ((int)$category['job_count'] === 0): ?>
-                                                    <form method="POST" action="php/functions/categories.php" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                                    <form method="POST" action="/admin/categories" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this category?');">
                                                         <input type="hidden" name="action" value="delete">
                                                         <input type="hidden" name="category_id" value="<?php echo (int)$category['category_id']; ?>">
                                                         <button type="submit" class="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors" title="Delete">
@@ -165,8 +165,8 @@ include_once 'partials/header.php';
                 </button>
             </div>
 
-            <form method="POST" action="php/functions/categories.php" class="px-6 py-6 space-y-4">
-                <input type="hidden" name="action" value="edit">
+            <form method="POST" action="/admin/categories" class="px-6 py-6 space-y-4">
+                <input type="hidden" name="action" value="update">
                 <input type="hidden" name="category_id" id="editCategoryId">
 
                 <div>
