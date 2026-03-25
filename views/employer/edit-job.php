@@ -4,16 +4,49 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 $connectionPath = __DIR__ . '/../../php/config/connection.php';
 if (file_exists($connectionPath)) require_once $connectionPath;
 
-// Fetch categories from database
+// Get job ID from route
+$job_id = (int)($_ROUTE['id'] ?? 0);
+if ($job_id <= 0) {
+    header('Location: /employer/jobs');
+    exit;
+}
+
+// Get current employer
+$employer_id = $_SESSION['currentUser'] ?? null;
+if (!$employer_id) {
+    header('Location: /login');
+    exit;
+}
+
+// Fetch job details
+$job = null;
 $categories = [];
 try {
     $db = getDB();
+    
+    // Fetch categories
     $stmt = $db->query("SELECT category_id, category_name FROM job_categories ORDER BY category_name ASC");
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Fetch job
+    $stmt = $db->prepare("SELECT * FROM jobs WHERE job_id = ? AND employer_id = ?");
+    $stmt->execute([$job_id, $employer_id]);
+    $job = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$job) {
+        header('Location: /employer/jobs');
+        exit;
+    }
 } catch (Exception $e) {
-    error_log("Error fetching categories: " . $e->getMessage());
+    error_log("Error fetching job: " . $e->getMessage());
+    header('Location: /employer/jobs');
+    exit;
 }
 
+$navUserName = $_SESSION['currentUserName'] ?? null;
+$navUserRole = $_SESSION['currentUserRole'] ?? null;
+$navUserId   = $_SESSION['currentUser']     ?? null;
+$isLoggedIn  = isset($_SESSION['currentUser']);
 
 // Get error/success messages
 $error = $_SESSION['error'] ?? null;
@@ -27,11 +60,11 @@ include_once 'partials/header.php';
 <section class="relative w-full overflow-hidden" style="height:280px;">
     <div class="absolute inset-0" style="background: linear-gradient(135deg, #8b91dd 0%, #10195d 70%, #10195d 100%); opacity:0.92;"></div>
     <div class="absolute inset-0 flex flex-col items-center justify-end pb-10 z-10">
-        <h1 class="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Post a Job</h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight">Edit Job</h1>
         <p class="text-gray-300 text-sm">
-            <a href="/" class="underline underline-offset-2 hover:text-white transition-colors">Home</a>
+            <a href="/employer/jobs" class="underline underline-offset-2 hover:text-white transition-colors">Jobs</a>
             <span class="mx-2 opacity-50">—</span>
-            <span class="text-white">Post a Job</span>
+            <span class="text-white">Edit Job</span>
         </p>
     </div>
 </section>
@@ -53,8 +86,9 @@ include_once 'partials/header.php';
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="../php/functions/jobs.php" enctype="multipart/form-data" id="jobForm">
-            <input type="hidden" name="action" value="create">
+        <form method="POST" action="../../php/functions/jobs.php" enctype="multipart/form-data" id="jobForm">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="job_id" value="<?php echo (int)$job['job_id']; ?>">
 
             <!-- ════════════════════════════════════════════ -->
             <!--  SECTION 1: Job Details                      -->
@@ -69,20 +103,23 @@ include_once 'partials/header.php';
                     <!-- Job Title -->
                     <div>
                         <label class="form-label" for="title">Job Title <span class="text-red-500">*</span></label>
-                        <input class="form-input rounded-md" type="text" id="title" name="title" placeholder="e.g. Senior Software Engineer" required>
+                        <input class="form-input rounded-md" type="text" id="title" name="title" placeholder="e.g. Senior Software Engineer" 
+                            value="<?php echo htmlspecialchars($job['title']); ?>" required>
                     </div>
 
                     <!-- Location + Remote -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="form-label" for="location">Location <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="text" id="location" name="location" placeholder='e.g. "Nairobi"'>
+                            <input class="form-input rounded-md" type="text" id="location" name="location" placeholder='e.g. "Nairobi"'
+                                value="<?php echo htmlspecialchars($job['location'] ?? ''); ?>">
                             <p class="text-xs text-slate-400 mt-1">Leave blank if location is not important</p>
                         </div>
                         <div class="flex flex-col justify-center">
                             <label class="form-label">Remote Position</label>
                             <label class="flex items-center gap-2.5 cursor-pointer mt-1">
-                                <input type="checkbox" name="remote" id="remote" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400">
+                                <input type="checkbox" name="remote" id="remote" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400"
+                                    <?php echo (($job['location'] ?? '') === 'Remote') ? 'checked' : ''; ?>>
                                 <span class="text-sm text-slate-600">This is a remote position</span>
                             </label>
                         </div>
@@ -94,37 +131,37 @@ include_once 'partials/header.php';
                             <label class="form-label" for="job_type">Job Type <span class="text-red-500">*</span></label>
                             <select class="form-select" id="job_type" name="job_type" required>
                                 <option value="">Select type…</option>
-                                <option value="Full Time">Full Time</option>
-                                <option value="Part Time">Part Time</option>
-                                <option value="Contract">Contract</option>
-                                <option value="Internship">Internship</option>
-                                <option value="Freelance">Freelance</option>
-                                <option value="Temporary">Temporary</option>
-                                <option value="Remote">Remote</option>
+                                <option value="Full Time" <?php echo ($job['job_type'] === 'Full Time') ? 'selected' : ''; ?>>Full Time</option>
+                                <option value="Part Time" <?php echo ($job['job_type'] === 'Part Time') ? 'selected' : ''; ?>>Part Time</option>
+                                <option value="Contract" <?php echo ($job['job_type'] === 'Contract') ? 'selected' : ''; ?>>Contract</option>
+                                <option value="Internship" <?php echo ($job['job_type'] === 'Internship') ? 'selected' : ''; ?>>Internship</option>
+                                <option value="Freelance" <?php echo ($job['job_type'] === 'Freelance') ? 'selected' : ''; ?>>Freelance</option>
+                                <option value="Temporary" <?php echo ($job['job_type'] === 'Temporary') ? 'selected' : ''; ?>>Temporary</option>
+                                <option value="Remote" <?php echo ($job['job_type'] === 'Remote') ? 'selected' : ''; ?>>Remote</option>
                             </select>
                         </div>
                         <div>
                             <label class="form-label" for="experience_level">Career Level <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
                             <select class="form-select" id="experience_level" name="experience_level">
-                                <option value="Not specified">Not specified</option>
-                                <option value="Entry Level">Entry Level</option>
-                                <option value="Mid Level">Mid Level</option>
-                                <option value="Senior">Senior</option>
-                                <option value="Lead">Lead</option>
-                                <option value="Manager">Manager</option>
-                                <option value="Executive">Executive</option>
+                                <option value="Not specified" <?php echo ($job['experience_level'] === 'Not specified') ? 'selected' : ''; ?>>Not specified</option>
+                                <option value="Entry Level" <?php echo ($job['experience_level'] === 'Entry Level') ? 'selected' : ''; ?>>Entry Level</option>
+                                <option value="Mid Level" <?php echo ($job['experience_level'] === 'Mid Level') ? 'selected' : ''; ?>>Mid Level</option>
+                                <option value="Senior" <?php echo ($job['experience_level'] === 'Senior') ? 'selected' : ''; ?>>Senior</option>
+                                <option value="Lead" <?php echo ($job['experience_level'] === 'Lead') ? 'selected' : ''; ?>>Lead</option>
+                                <option value="Manager" <?php echo ($job['experience_level'] === 'Manager') ? 'selected' : ''; ?>>Manager</option>
+                                <option value="Executive" <?php echo ($job['experience_level'] === 'Executive') ? 'selected' : ''; ?>>Executive</option>
                             </select>
                         </div>
                         <div>
                             <label class="form-label" for="required_qualification">Qualification <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
                             <select class="form-select" id="required_qualification" name="required_qualification">
-                                <option value="Not specified">Not specified</option>
-                                <option value="High School">High School</option>
-                                <option value="Diploma">Diploma</option>
-                                <option value="Bachelor Degree">Bachelor Degree</option>
-                                <option value="Master Degree">Master Degree</option>
-                                <option value="PhD">PhD</option>
-                                <option value="Certification">Certification</option>
+                                <option value="Not specified" <?php echo ($job['required_qualification'] === 'Not specified') ? 'selected' : ''; ?>>Not specified</option>
+                                <option value="High School" <?php echo ($job['required_qualification'] === 'High School') ? 'selected' : ''; ?>>High School</option>
+                                <option value="Diploma" <?php echo ($job['required_qualification'] === 'Diploma') ? 'selected' : ''; ?>>Diploma</option>
+                                <option value="Bachelor Degree" <?php echo ($job['required_qualification'] === 'Bachelor Degree') ? 'selected' : ''; ?>>Bachelor Degree</option>
+                                <option value="Master Degree" <?php echo ($job['required_qualification'] === 'Master Degree') ? 'selected' : ''; ?>>Master Degree</option>
+                                <option value="PhD" <?php echo ($job['required_qualification'] === 'PhD') ? 'selected' : ''; ?>>PhD</option>
+                                <option value="Certification" <?php echo ($job['required_qualification'] === 'Certification') ? 'selected' : ''; ?>>Certification</option>
                             </select>
                         </div>
                     </div>
@@ -133,17 +170,21 @@ include_once 'partials/header.php';
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="form-label" for="salary_min">Minimum Salary <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="number" id="salary_min" name="salary_min" placeholder="e.g. 50000" min="0" step="1000">
+                            <input class="form-input rounded-md" type="number" id="salary_min" name="salary_min" placeholder="e.g. 50000" min="0" step="1000"
+                                value="<?php echo htmlspecialchars($job['salary_min'] ?? ''); ?>">
                         </div>
                         <div>
                             <label class="form-label" for="salary_max">Maximum Salary <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="number" id="salary_max" name="salary_max" placeholder="e.g. 150000" min="0" step="1000">
+                            <input class="form-input rounded-md" type="number" id="salary_max" name="salary_max" placeholder="e.g. 150000" min="0" step="1000"
+                                value="<?php echo htmlspecialchars($job['salary_max'] ?? ''); ?>">
                         </div>
                         <div>
                             <label class="form-label">Years of Experience <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
                             <div class="flex gap-2">
-                                <input class="form-input rounded-md" type="number" id="years_experience_min" name="years_experience_min" placeholder="Min" min="0" step="1" max="60">
-                                <input class="form-input rounded-md" type="number" id="years_experience_max" name="years_experience_max" placeholder="Max" min="0" step="1" max="60">
+                                <input class="form-input rounded-md" type="number" id="years_experience_min" name="years_experience_min" placeholder="Min" min="0" step="1" max="60"
+                                    value="<?php echo htmlspecialchars($job['years_experience_min'] ?? ''); ?>">
+                                <input class="form-input rounded-md" type="number" id="years_experience_max" name="years_experience_max" placeholder="Max" min="0" step="1" max="60"
+                                    value="<?php echo htmlspecialchars($job['years_experience_max'] ?? ''); ?>">
                             </div>
                         </div>
                     </div>
@@ -154,7 +195,8 @@ include_once 'partials/header.php';
                         <select class="form-select" id="category_id" name="category_id">
                             <option value="">Choose a category…</option>
                             <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo (int)$category['category_id']; ?>">
+                                <option value="<?php echo (int)$category['category_id']; ?>"
+                                    <?php echo ($job['category_id'] == $category['category_id']) ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($category['category_name']); ?>
                                 </option>
                             <?php endforeach; ?>
@@ -165,18 +207,20 @@ include_once 'partials/header.php';
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="form-label" for="deadline">Application Deadline <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="date" id="deadline" name="deadline">
+                            <input class="form-input rounded-md" type="date" id="deadline" name="deadline"
+                                value="<?php echo htmlspecialchars($job['deadline'] ?? ''); ?>">
                         </div>
                         <div class="flex flex-col justify-center">
                             <label class="form-label">Featured Job</label>
                             <label class="flex items-center gap-2.5 cursor-pointer mt-1">
-                                <input type="checkbox" name="featured" id="featured" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400">
+                                <input type="checkbox" name="featured" id="featured" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400"
+                                    <?php echo ($job['featured'] == 1) ? 'checked' : ''; ?>>
                                 <span class="text-sm text-slate-600">Promote this job (appears in featured section)</span>
                             </label>
                         </div>
                     </div>
 
-                    <!-- Description (Markdown Editor) -->
+                    <!-- Description -->
                     <div>
                         <label class="form-label">Job Description <span class="text-red-500">*</span></label>
                         <p class="text-xs text-slate-400 mb-2">Use the toolbar to format — supports <strong>bold</strong>, <em>italic</em>, lists, and headings.</p>
@@ -203,7 +247,7 @@ include_once 'partials/header.php';
                             class="w-full px-4 py-3 border border-slate-200 rounded-b-xl bg-white text-sm text-slate-800 placeholder-slate-400
                      focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent
                      resize-y font-mono leading-relaxed transition duration-150"
-                            required></textarea>
+                            required><?php echo htmlspecialchars($job['description']); ?></textarea>
 
                         <!-- Preview Panel (hidden by default) -->
                         <div id="mdPreview"
@@ -215,16 +259,16 @@ include_once 'partials/header.php';
             </div>
             <!-- ── Action Buttons ── -->
             <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="button" id="draftBtn"
+                <a href="/employer/jobs"
                     class="px-6 py-2.5 rounded-xl text-sm font-semibold border-2 border-slate-300 text-slate-600 hover:border-slate-400 bg-white transition duration-150">
-                    Save Draft
-                </button>
+                    Cancel
+                </a>
                 <button type="submit"
                     class="px-8 py-2.5 rounded-xl text-sm font-semibold text-white transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#d5225a]"
                     style="background-color:#198754;"
                     onmouseover="this.style.backgroundColor='#d5225bc2'"
                     onmouseout="this.style.backgroundColor='#D5225A'">
-                    Post Job
+                    Update Job
                 </button>
             </div>
 
@@ -299,36 +343,19 @@ include_once 'partials/header.php';
         font-size: 1.1rem;
         font-weight: 700;
         margin-top: 1rem;
-        margin-bottom: 0.4rem;
-        color: #1e293b;
+        margin-bottom: 0.5rem;
     }
 
     .prose h3 {
-        font-size: 0.95rem;
-        font-weight: 700;
+        font-size: 1rem;
+        font-weight: 600;
         margin-top: 0.8rem;
-        margin-bottom: 0.3rem;
-        color: #1e293b;
+        margin-bottom: 0.4rem;
     }
 
-    .prose p {
-        margin-bottom: 0.6rem;
-    }
-
-    .prose ul {
-        list-style: disc;
-        padding-left: 1.4rem;
-        margin-bottom: 0.6rem;
-    }
-
-    .prose ol {
-        list-style: decimal;
-        padding-left: 1.4rem;
-        margin-bottom: 0.6rem;
-    }
-
-    .prose li {
-        margin-bottom: 0.2rem;
+    .prose ul, .prose ol {
+        padding-left: 1.5rem;
+        margin-bottom: 0.5rem;
     }
 
     .prose strong {
@@ -340,139 +367,100 @@ include_once 'partials/header.php';
     }
 </style>
 
-<!-- ── Markdown Formatter + Preview ── -->
 <script>
-    const textarea = document.getElementById('description');
-    const previewEl = document.getElementById('mdPreview');
-    const previewBtn = document.getElementById('previewBtn');
-    let inPreview = false;
-
+    /**
+     * Markdown editor toolbar functions
+     */
     function fmt(type) {
+        const textarea = document.getElementById('description');
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
-        const sel = textarea.value.substring(start, end);
-        let insert = '';
-        const maps = {
-            bold: `**${sel || 'bold text'}**`,
-            italic: `_${sel || 'italic text'}_`,
-            h2: `\n## ${sel || 'Heading'}`,
-            h3: `\n### ${sel || 'Heading'}`,
-            ul: `\n- ${sel || 'List item'}`,
-            ol: `\n1. ${sel || 'List item'}`,
-        };
-        insert = maps[type] || sel;
-        textarea.setRangeText(insert, start, end, 'end');
-        textarea.focus();
-    }
+        const text = textarea.value;
+        const selected = text.substring(start, end);
+        let newText = '';
 
-    // Minimal markdown → HTML parser (no external lib needed)
-    function parseMarkdown(md) {
-        return md
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // escape
-            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-            .replace(/^# (.+)$/gm, '<h2>$1</h2>')
-            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            .replace(/_(.+?)_/g, '<em>$1</em>')
-            .replace(/^\d+\. (.+)$/gm, '<li class="ol-item">$1</li>')
-            .replace(/^[-*] (.+)$/gm, '<li class="ul-item">$1</li>')
-            .replace(/(<li class="ol-item">.*<\/li>\n?)+/g, m => `<ol>${m.replace(/ class="ol-item"/g,'')}</ol>`)
-            .replace(/(<li class="ul-item">.*<\/li>\n?)+/g, m => `<ul>${m.replace(/ class="ul-item"/g,'')}</ul>`)
-            .replace(/\n{2,}/g, '</p><p>')
-            .replace(/^(?!<[huo]|<p)(.+)$/gm, '<p>$1</p>')
-            .replace(/<p><\/p>/g, '');
+        if (type === 'bold') {
+            newText = `**${selected || 'bold text'}**`;
+        } else if (type === 'italic') {
+            newText = `*${selected || 'italic text'}*`;
+        } else if (type === 'h2') {
+            newText = `## ${selected || 'Heading 2'}\n`;
+        } else if (type === 'h3') {
+            newText = `### ${selected || 'Heading 3'}\n`;
+        } else if (type === 'ul') {
+            newText = `• ${selected || 'List item'}\n`;
+        } else if (type === 'ol') {
+            newText = `1. ${selected || 'List item'}\n`;
+        }
+
+        textarea.value = text.substring(0, start) + newText + text.substring(end);
+        textarea.focus();
+        updatePreview();
     }
 
     function togglePreview() {
-        inPreview = !inPreview;
-        if (inPreview) {
-            previewEl.innerHTML = parseMarkdown(textarea.value) || '<span class="text-slate-400 text-sm italic">Nothing to preview yet…</span>';
-            previewEl.classList.remove('hidden');
-            textarea.classList.add('hidden');
-            previewBtn.textContent = 'Edit';
+        const preview = document.getElementById('mdPreview');
+        const btn = document.getElementById('previewBtn');
+        if (preview.classList.contains('hidden')) {
+            preview.classList.remove('hidden');
+            btn.textContent = 'Hide Preview';
+            updatePreview();
         } else {
-            previewEl.classList.add('hidden');
-            textarea.classList.remove('hidden');
-            previewBtn.textContent = 'Preview';
+            preview.classList.add('hidden');
+            btn.textContent = 'Preview';
         }
     }
 
-    // Save draft (just serializes to sessionStorage for now)
-    document.getElementById('draftBtn').addEventListener('click', () => {
-        const data = {};
-        new FormData(document.getElementById('jobForm')).forEach((v, k) => data[k] = v);
-        sessionStorage.setItem('jobDraft', JSON.stringify(data));
-        const btn = document.getElementById('draftBtn');
-        btn.textContent = '✓ Draft Saved';
-        btn.classList.add('border-[#d5225bc2]', 'text-[#D5225A]');
-        setTimeout(() => {
-            btn.textContent = 'Save Draft';
-            btn.classList.remove('border-[#d5225bc2]', 'text-[#D5225A]');
-        }, 2000);
-    });
+    function updatePreview() {
+        const textarea = document.getElementById('description');
+        const preview = document.getElementById('mdPreview');
+        const text = textarea.value;
 
-    // Restore draft on load
-    window.addEventListener('DOMContentLoaded', () => {
-        const saved = sessionStorage.getItem('jobDraft');
-        if (!saved) return;
-        const data = JSON.parse(saved);
-        Object.entries(data).forEach(([k, v]) => {
-            const el = document.querySelector(`[name="${k}"]`);
-            if (el && el.type !== 'file') el.value = v;
-        });
-    });
+        // Simple markdown to HTML conversion (very basic)
+        let html = text
+            .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+            .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+            .replace(/^\* (.*?)$/gm, '<li>$1</li>')
+            .replace(/^1\. (.*?)$/gm, '<li>$1</li>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>');
 
-    // Form submission with validation and error handling
-    document.getElementById('jobForm')?.addEventListener('submit', async function(e) {
-        e.preventDefault();
+        preview.innerHTML = html;
+    }
 
-        const title = document.getElementById('title')?.value?.trim();
-        const description = document.getElementById('description')?.value?.trim();
-        const jobType = document.getElementById('job_type')?.value?.trim();
+    /**
+     * Form submission validation and SweetAlert integration
+     */
+    const form = document.getElementById('jobForm');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
 
-        // Client-side validation
-        if (!title) {
-            showError('Job Title is required');
-            return false;
-        }
+            const title = document.getElementById('title')?.value?.trim() || '';
+            const description = document.getElementById('description')?.value?.trim() || '';
+            const jobType = document.getElementById('job_type')?.value?.trim() || '';
 
-        if (!description) {
-            showError('Job Description is required');
-            return false;
-        }
+            if (!title) {
+                showError('Job title is required');
+                return;
+            }
+            if (!description) {
+                showError('Job description is required');
+                return;
+            }
+            if (!jobType) {
+                showError('Job type is required');
+                return;
+            }
+            if (description.length < 20) {
+                showError('Job description must be at least 20 characters long');
+                return;
+            }
 
-        if (!jobType) {
-            showError('Job Type is required');
-            return false;
-        }
-
-        if (description.length < 20) {
-            showError('Job Description must be at least 20 characters');
-            return false;
-        }
-
-        // Show loading state
-        const submitBtn = document.getElementById('submitBtn');
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Posting Job...';
-
-        try {
-            // Submit the form
             this.submit();
-        } catch (error) {
-            console.error('Form submission error:', error);
-            error_log(JSON.stringify({
-                message: error.message,
-                stack: error.stack,
-                timestamp: new Date().toISOString()
-            }));
-
-            showError('An unexpected error occurred: ' + error.message);
-            submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
-        }
-    });
+        });
+    }
 
     function showError(message) {
         console.error('Job Form Error:', message);
@@ -525,7 +513,7 @@ include_once 'partials/header.php';
                     allowOutsideClick: false
                 }).then(result => {
                     if (result.isConfirmed) {
-                        window.location.href = '/jobs';
+                        window.location.href = '/employer/jobs';
                     }
                 });
                 return; // Exit after showing error
@@ -543,7 +531,7 @@ include_once 'partials/header.php';
                     title: 'Success!',
                     text: successMsg,
                     confirmButtonColor: '#2b9a66',
-                    confirmButtonText: 'View Your Job',
+                    confirmButtonText: 'View Your Jobs',
                     allowOutsideClick: false
                 }).then(result => {
                     if (result.isConfirmed) {

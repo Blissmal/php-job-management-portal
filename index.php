@@ -79,6 +79,7 @@ $routes = [
     ['GET',  '/employers',      'views/employers.php',      null],
     ['GET',  '/post-a-job',     'views/post-a-job.php',     'requireEmployerWithProfile'],
     ['POST', '/post-a-job',     'php/functions/store-job.php', 'requireEmployerWithProfile'],
+    ['GET',  '/employer/jobs/:id/edit', 'views/employer/edit-job.php', 'requireEmployerWithProfile'],
     ['GET',  '/login',          'views/login.php',          'requireGuest'],
     ['POST', '/login',          'php/function/login.php',  'requireGuest'],
     ['GET',  '/register',       'views/register.php',       'requireGuest'],

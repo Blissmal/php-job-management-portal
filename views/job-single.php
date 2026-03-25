@@ -9,8 +9,12 @@ if (!ctype_digit($id)) {
     exit('Invalid job ID');
 }
 $job_id = (int)$id;
-error_log($job_id);
-error_log($_ROUTE['id']);
+
+// Get current user info for edit button visibility
+$current_user_id = $_SESSION['currentUser'] ?? null;
+$current_user_role = $_SESSION['currentUserRole'] ?? null;
+$is_employer = $current_user_role === 'employer';
+$is_owner = false;
 
 if ($job_id <= 0) {
     http_response_code(404);
@@ -25,6 +29,7 @@ try {
     $stmt = $db->prepare("
         SELECT
             j.job_id,
+            j.employer_id,
             j.title,
             j.job_type        AS type,
             j.location,
@@ -81,6 +86,9 @@ try {
         include_once 'views/404.php';
         exit;
     }
+
+    // Check if current user is the owner of this job
+    $is_owner = ($is_employer && $current_user_id === (int)$row['employer_id']);
 
     // ── Map DB row to template-friendly shape ─────────────────────────────────
     $palettes = [
@@ -219,12 +227,21 @@ try {
             <!-- ── Right: Sidebar ───────────────────────────────────────── -->
             <div class="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 flex flex-col gap-5">
 
-                <!-- Apply button -->
-                <a href="/jobs/<?php echo (int)$job['job_id']; ?>/apply"
-                    class="w-full block text-center bg-[#fb236a] hover:bg-[#e01060] text-white font-semibold text-base
-                py-4 rounded-lg shadow transition-colors duration-200">
-                    Apply for this job
-                </a>
+                <!-- Edit button (if owner) / Apply button -->
+                <?php if ($is_owner): ?>
+                    <a href="/employer/jobs/<?php echo (int)$job['job_id']; ?>/edit"
+                        class="w-full block text-center bg-[#2b9a66] hover:bg-[#1e7047] text-white font-semibold text-base
+                    py-4 rounded-lg shadow transition-colors duration-200 flex items-center justify-center gap-2">
+                        <i data-lucide="edit" class="w-5 h-5"></i>
+                        Edit Job
+                    </a>
+                <?php else: ?>
+                    <a href="/jobs/<?php echo (int)$job['job_id']; ?>/apply"
+                        class="w-full block text-center bg-[#fb236a] hover:bg-[#e01060] text-white font-semibold text-base
+                    py-4 rounded-lg shadow transition-colors duration-200">
+                        Apply for this job
+                    </a>
+                <?php endif; ?>
 
                 <!-- Job Overview -->
                 <div class="bg-white px-6 py-5 rounded-lg border border-gray-100 shadow-sm">
