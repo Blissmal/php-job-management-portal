@@ -72,7 +72,7 @@ $routes = [
     ['GET',  '/post-a-job',     'views/post-a-job.php',     'requireEmployerWithProfile'],
     ['POST', '/post-a-job',     'php/functions/store-job.php', 'requireEmployerWithProfile'],
     ['GET',  '/login',          'views/login.php',          'requireGuest'],
-    ['POST', '/login',          'php/functions/login.php',  'requireGuest'],
+    ['POST', '/login',          'php/function/login.php',  'requireGuest'],
     ['GET',  '/register',       'views/register.php',       'requireGuest'],
     ['POST', '/register',       'php/functions/register.php', 'requireGuest'],
     ['GET',  '/seeker/dashboard',      'views/seeker/dashboard.php',      'requireSeekerWithProfile'],
