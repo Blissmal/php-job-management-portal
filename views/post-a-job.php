@@ -48,7 +48,7 @@ include_once 'partials/header.php';
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="/php/function/post-job.php" enctype="multipart/form-data" id="jobForm">
+        <form method="POST" action="/php/functions/post-job.php" enctype="multipart/form-data" id="jobForm">
 
             <!-- ════════════════════════════════════════════ -->
             <!--  SECTION 1: Job Details                      -->

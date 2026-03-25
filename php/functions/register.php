@@ -1,7 +1,7 @@
 <?php
 
 /**
- * php/function/register.php
+ * php/functions/register.php
  * Unified registration handler for both job seekers and employers.
  */
 require_once __DIR__ . '/../config/connection.php';

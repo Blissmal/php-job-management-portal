@@ -1,7 +1,7 @@
 <?php
 
 /**
- * php/function/download_resume.php
+ * php/functions/download_resume.php
  * Streams resume files to authorised users only.
  * Employers can download resumes for jobs they own.
  * Seekers can download their own application snapshot or profile resume.
