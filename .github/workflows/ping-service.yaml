@@ -1,0 +1,40 @@
+name: Keep Backend Alive
+
+on:
+  schedule:
+    - cron: "*/2 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping-service:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend
+        id: ping
+        run: |
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            https://php-job-management-portal.onrender.com/)
+
+          echo "Response: $RESPONSE"
+
+          if [ "$RESPONSE" -ne 200 ]; then
+            echo "service_down=true" >> $GITHUB_ENV
+          else
+            echo "service_down=false" >> $GITHUB_ENV
+          fi
+
+      - name: Send Email if Service is Down
+        if: env.service_down == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
+          subject: "⚠️ Backend Service Down"
+          to: ${{ secrets.ALERT_EMAIL }}
+          from: GitHub Actions <${{ secrets.EMAIL_USER }}>
+          body: |
+            The backend service ( https://php-job-management-portal.onrender.com/) is down.
+            Time: ${{ github.event.schedule }}
