@@ -2,39 +2,121 @@ name: Keep Backend Alive
 
 on:
   schedule:
-    - cron: "*/2 * * * *"
+    - cron: "*/5 * * * *"  # Ping every 5 minutes to keep server awake
   workflow_dispatch:
 
 jobs:
   ping-service:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Backend
-        id: ping
+      - name: Initial Health Check Ping
+        id: initial_ping
         run: |
-          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+          echo "🔍 Sending initial ping to health check endpoint..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            https://php-job-management-portal.onrender.com/ping)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+          
+          echo "HTTP Status: $HTTP_CODE"
+          echo "Response Body:"
+          echo "$BODY"
+          
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+          echo "body=$BODY" >> $GITHUB_OUTPUT
+
+      - name: Database Wake-up Query
+        id: db_ping
+        run: |
+          echo "🗄️ Executing database health check via API..."
+          DB_RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X GET \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            https://php-job-management-portal.onrender.com/ping)
+          
+          DB_HTTP_CODE=$(echo "$DB_RESPONSE" | tail -n 1)
+          DB_BODY=$(echo "$DB_RESPONSE" | head -n -1)
+          
+          echo "Database Check HTTP Status: $DB_HTTP_CODE"
+          echo "Database Check Response:"
+          echo "$DB_BODY"
+          
+          echo "db_http_code=$DB_HTTP_CODE" >> $GITHUB_OUTPUT
+
+      - name: Secondary Wake-up Ping (Homepage)
+        id: homepage_ping
+        run: |
+          echo "🏠 Loading homepage to wake up session handler..."
+          HOMEPAGE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
             https://php-job-management-portal.onrender.com/)
+          
+          echo "Homepage HTTP Status: $HOMEPAGE"
+          echo "homepage_code=$HOMEPAGE" >> $GITHUB_OUTPUT
 
-          echo "Response: $RESPONSE"
-
-          if [ "$RESPONSE" -ne 200 ]; then
-            echo "service_down=true" >> $GITHUB_ENV
+      - name: Determine Service Status
+        id: status
+        run: |
+          INITIAL_CODE=${{ steps.initial_ping.outputs.http_code }}
+          DB_CODE=${{ steps.db_ping.outputs.db_http_code }}
+          HOMEPAGE_CODE=${{ steps.homepage_ping.outputs.homepage_code }}
+          
+          # Consider service healthy if any endpoint responds with 200
+          if [ "$INITIAL_CODE" = "200" ] || [ "$DB_CODE" = "200" ] || [ "$HOMEPAGE_CODE" = "200" ]; then
+            echo "service_status=healthy" >> $GITHUB_OUTPUT
+            echo "✅ Service is healthy and awake"
           else
-            echo "service_down=false" >> $GITHUB_ENV
+            echo "service_status=unhealthy" >> $GITHUB_OUTPUT
+            echo "❌ Service appears to be down"
           fi
 
-      - name: Send Email if Service is Down
-        if: env.service_down == 'true'
+      - name: Send Alert if Service is Down
+        if: steps.status.outputs.service_status == 'unhealthy'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 587
           username: ${{ secrets.EMAIL_USER }}
           password: ${{ secrets.EMAIL_PASS }}
-          subject: "⚠️ Backend Service Down"
+          subject: "🚨 CRITICAL: Backend Service Down - Immediate Action Required"
           to: ${{ secrets.ALERT_EMAIL }}
-          from: GitHub Actions <${{ secrets.EMAIL_USER }}>
+          from: "GitHub Actions <${{ secrets.EMAIL_USER }}>"
           body: |
-            The backend service ( https://php-job-management-portal.onrender.com/) is down.
-            Time: ${{ github.event.schedule }}
+            ⚠️ **CRITICAL ALERT**
+            
+            The backend service is down and not responding to health checks.
+            
+            **Service Details:**
+            - URL: https://php-job-management-portal.onrender.com/
+            - Health Check Endpoint: https://php-job-management-portal.onrender.com/ping
+            - Time: ${{ github.event.schedule }}
+            - Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+            
+            **HTTP Status Codes:**
+            - Health Check: ${{ steps.initial_ping.outputs.http_code }}
+            - Database Check: ${{ steps.db_ping.outputs.db_http_code }}
+            - Homepage: ${{ steps.homepage_ping.outputs.homepage_code }}
+            
+            **Recommended Actions:**
+            1. Check Render.com dashboard for service status
+            2. Review application logs for errors
+            3. Verify database connection status
+            4. Consider manual restart if needed
+            
+            Please investigate and resolve immediately.
+            
+            ---
+            *Automated health check from GitHub Actions*
+
+      - name: Log Ping Summary
+        if: always()
+        run: |
+          echo "📊 === PING SUMMARY ===" 
+          echo "✓ Initial Health Check: ${{ steps.initial_ping.outputs.http_code }}"
+          echo "✓ Database Health Check: ${{ steps.db_ping.outputs.db_http_code }}"
+          echo "✓ Homepage Load: ${{ steps.homepage_ping.outputs.homepage_code }}"
+          echo "✓ Overall Status: ${{ steps.status.outputs.service_status }}"
+          echo "✓ Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
