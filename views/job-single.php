@@ -11,8 +11,8 @@ if (!ctype_digit($id)) {
 $job_id = (int)$id;
 
 // Get current user info for edit button visibility
-$current_user_id = $_SESSION['currentUser'] ?? null;
-$current_user_role = $_SESSION['currentUserRole'] ?? null;
+$current_user_id = $_SESSION['user_id'] ?? null;
+$current_user_role = $_SESSION['role'] ?? null;
 $is_employer = $current_user_role === 'employer';
 $is_owner = false;
 
