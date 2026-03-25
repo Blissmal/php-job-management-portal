@@ -57,7 +57,7 @@ unset($_SESSION['error'], $_SESSION['success'], $_SESSION['profile_incomplete'])
 
         <!-- Card Body -->
         <div class="px-8 py-6">
-            <form method="POST" action="../../php/functions/profile.php" class="space-y-5">
+            <form method="POST" action="/employer/profile" class="space-y-5">
 
                 <!-- Company Name -->
                 <div>

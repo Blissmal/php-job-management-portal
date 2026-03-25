@@ -42,6 +42,7 @@ if ($userRole === 'seeker') {
     ['icon' => 'layout-dashboard', 'label' => 'Dashboard',       'href' => '/employer/dashboard', 'badge' => null],
     ['icon' => 'briefcase',        'label' => 'Posted Jobs',      'href' => '/employer/jobs', 'badge' => null],
     ['icon' => 'users',            'label' => 'Applications',     'href' => '/employer/applications', 'badge' => null],
+    ['icon' => 'user',             'label' => 'Company Profile',   'href' => '/employer/profile', 'badge' => null],
   ];
 } elseif ($userRole === 'admin') {
   $sidebarMenu = [

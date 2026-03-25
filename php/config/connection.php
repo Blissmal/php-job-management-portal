@@ -34,9 +34,6 @@ function loadEnv(string $path)
         putenv("$key=$value");
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
-
-        // DEBUG: log each loaded variable
-        error_log("LOADED ENV: $key=$value");
     }
 }
 
@@ -56,13 +53,6 @@ function getDB(): PDO
         $dbname   = getenv('DB_NAME') ?: 'authentication_system';
         $username = getenv('DB_USER') ?: 'root';
         $password = getenv('DB_PASS') ?: 'root';
-
-        // DEBUG LOG (remove in production)
-        error_log("DB_HOST=" . var_export($host, true));
-        error_log("DB_PORT=" . var_export($port, true));
-        error_log("DB_NAME=" . var_export($dbname, true));
-        error_log("DB_USER=" . var_export($username, true));
-        error_log("DB_PASS=" . var_export($password, true));
 
         $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
 
@@ -88,4 +78,3 @@ try {
 } catch (Exception $e) {
     error_log("Database connection error: " . $e->getMessage());
 }
-

@@ -3,7 +3,18 @@
 // Must run BEFORE header (which starts the session and loads connection)
 require_once 'php/config/connection.php';
 
-$job_id = (int)($_ROUTE['id'] ?? 0);
+$id = $_ROUTE['id'] ?? '';
+if (!ctype_digit($id)) {
+    http_response_code(404);
+    exit('Invalid job ID');
+}
+$job_id = (int)$id;
+
+// Get current user info for edit button visibility
+$current_user_id = $_SESSION['user_id'] ?? null;
+$current_user_role = $_SESSION['role'] ?? null;
+$is_employer = $current_user_role === 'employer';
+$is_owner = false;
 
 if ($job_id <= 0) {
     http_response_code(404);
@@ -18,6 +29,7 @@ try {
     $stmt = $db->prepare("
         SELECT
             j.job_id,
+            j.employer_id,
             j.title,
             j.job_type        AS type,
             j.location,
@@ -63,7 +75,7 @@ try {
             FROM jobs j
             JOIN employer_profiles ep ON j.employer_id = ep.user_id
             LEFT JOIN job_categories jc ON j.category_id = jc.category_id
-            WHERE j.job_id = ? 
+            WHERE j.job_id = ?
             AND j.status = 'open'
     ");
     $stmt->execute([$job_id]);
@@ -73,6 +85,17 @@ try {
         http_response_code(404);
         include_once 'views/404.php';
         exit;
+    }
+
+    // Check if current user is the owner of this job
+    $is_owner = ($is_employer && $current_user_id === (int)$row['employer_id']);
+
+    // Check if job is saved (for seekers)
+    $is_saved = false;
+    if ($current_user_id && $current_user_role === 'seeker') {
+        $checkSaved = $db->prepare("SELECT save_id FROM saved_jobs WHERE seeker_id = ? AND job_id = ?");
+        $checkSaved->execute([$current_user_id, $job_id]);
+        $is_saved = (bool)$checkSaved->fetch();
     }
 
     // ── Map DB row to template-friendly shape ─────────────────────────────────
@@ -212,12 +235,30 @@ try {
             <!-- ── Right: Sidebar ───────────────────────────────────────── -->
             <div class="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 flex flex-col gap-5">
 
-                <!-- Apply button -->
-                <a href="/jobs/<?php echo (int)$job['job_id']; ?>/apply"
-                    class="w-full block text-center bg-[#fb236a] hover:bg-[#e01060] text-white font-semibold text-base
-                py-4 rounded-lg shadow transition-colors duration-200">
-                    Apply for this job
-                </a>
+                <!-- Edit button (if owner) / Apply button -->
+                <?php if ($is_owner): ?>
+                    <a href="/employer/jobs/<?php echo (int)$job['job_id']; ?>/edit"
+                        class="w-full block text-center bg-[#2b9a66] hover:bg-[#1e7047] text-white font-semibold text-base
+                    py-4 rounded-lg shadow transition-colors duration-200 flex items-center justify-center gap-2">
+                        <i data-lucide="edit" class="w-5 h-5"></i>
+                        Edit Job
+                    </a>
+                <?php else: ?>
+                    <div class="flex flex-col gap-3">
+                        <a href="/jobs/<?php echo (int)$job['job_id']; ?>/apply"
+                            class="w-full block text-center bg-[#fb236a] hover:bg-[#e01060] text-white font-semibold text-base
+                        py-4 rounded-lg shadow transition-colors duration-200">
+                            Apply for this job
+                        </a>
+                        <button type="button" id="saveJobBtn"
+                            class="w-full px-4 py-3 border-2 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 <?php echo $is_saved ? 'border-[#fb236a] text-[#fb236a] bg-pink-50' : 'border-gray-300 text-gray-700 hover:border-[#fb236a] hover:text-[#fb236a]'; ?>"
+                            data-job-id="<?php echo (int)$job['job_id']; ?>"
+                            data-is-saved="<?php echo $is_saved ? 'true' : 'false'; ?>">
+                            <i data-lucide="bookmark" class="w-4 h-4"></i>
+                            <span id="saveJobBtnText"><?php echo $is_saved ? 'Saved' : 'Save Job'; ?></span>
+                        </button>
+                    </div>
+                <?php endif; ?>
 
                 <!-- Job Overview -->
                 <div class="bg-white px-6 py-5 rounded-lg border border-gray-100 shadow-sm">

@@ -70,13 +70,17 @@ function requireEmployerWithProfile(): void
 
 $routes = [
     ['GET',  '/',               'views/home.php',           null],
+    ['GET',  '/ping',           'php/functions/ping.php',   null],
     ['GET',  '/dashboard',      null,                       'handleDashboardRedirect'],
     ['GET',  '/jobs',           'views/jobs.php',           null],
     ['GET',  '/categories',           'views/categories.php',           null],
     ['GET',  '/jobs/:id',       'views/job-single.php',     null],
+    ['GET',  '/jobs/:id/apply',       'views/apply-job.php',     'requireSeekerWithProfile'],
+    ['POST', '/jobs/:id/apply',       'php/functions/apply.php',     'requireSeekerWithProfile'],
     ['GET',  '/employers',      'views/employers.php',      null],
     ['GET',  '/post-a-job',     'views/post-a-job.php',     'requireEmployerWithProfile'],
-    ['POST', '/post-a-job',     'php/functions/store-job.php', 'requireEmployerWithProfile'],
+    ['POST', '/post-a-job',     'php/functions/jobs.php', 'requireEmployerWithProfile'],
+    ['GET',  '/employer/jobs/:id/edit', 'views/employer/edit-job.php', 'requireEmployerWithProfile'],
     ['GET',  '/login',          'views/login.php',          'requireGuest'],
     ['POST', '/login',          'php/function/login.php',  'requireGuest'],
     ['GET',  '/register',       'views/register.php',       'requireGuest'],
@@ -94,9 +98,14 @@ $routes = [
     ['GET',  '/admin/employers',      'views/admin/employers.php',      'requireAdmin'],
     ['GET',  '/admin/jobs',           'views/admin/jobs.php',           'requireAdmin'],
     ['GET',  '/admin/applications',   'views/admin/applications.php',   'requireAdmin'],
+    ['GET',  '/admin/categories',     'views/admin/categories.php',     'requireAdmin'],
     ['GET',  '/admin/admins',         'views/admin/admins.php',         'requireAdmin'],
     ['GET',  '/admin/profile',      'views/admin/profile.php',      'requireAuth'],
     ['GET',  '/logout',         'php/functions/logout.php', 'requireAuth'],
+    ['POST', '/update-status',  'php/functions/update_status.php', 'requireEmployer'],
+    ['POST', '/admin/categories', 'php/functions/categories.php', 'requireAdmin'],
+    ['POST', '/seeker/profile', 'php/functions/profile.php', 'requireSeeker'],
+    ['POST', '/employer/profile', 'php/functions/profile.php', 'requireEmployer'],
 ];
 
 // ─── Dispatcher ────────────────────────────────────────────────────────────────
@@ -165,4 +174,3 @@ function handleDashboardRedirect(): void
     header("Location: $path");
     exit;
 }
-

@@ -2,7 +2,7 @@
 
 /**
  * php/functions/apply.php
- * Both cover letter (min 50 chars) and resume are required.
+ * Cover letter required (min 50 chars). Resume can be uploaded or use existing resume from profile.
  * Resumes are stored in: uploads/resumes/applications/[job_id]/[seeker_id]/
  */
 require_once __DIR__ . '/../config/connection.php';
@@ -24,45 +24,63 @@ $cover     = trim($_POST['cover_letter'] ?? '');
 // Cover letter required, min 50 chars
 if (strlen($cover) < 50) {
     $_SESSION['error'] = 'Cover letter is required and must be at least 50 characters.';
-    header('Location: ' . BASE_URL . '/job-detail?id=' . $job_id);
+    header('Location: ' . BASE_URL . '/jobs/' . $job_id . '/apply');
     exit;
 }
 $cover = htmlspecialchars($cover);
 
-// Resume is required
-if (empty($_FILES['resume']['name'])) {
-    $_SESSION['error'] = 'A resume file is required to apply.';
-    header('Location: ' . BASE_URL . '/job-detail?id=' . $job_id);
-    exit;
+$db = getDB();
+$resume_path = null;
+
+// Check if a new resume file was uploaded
+if (!empty($_FILES['resume']['name'])) {
+    $allowed_mime = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    ];
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime  = $finfo->file($_FILES['resume']['tmp_name']);
+    $size  = $_FILES['resume']['size'];
+
+    if (!in_array($mime, $allowed_mime) || $size > 10 * 1024 * 1024) {
+        $_SESSION['error'] = 'Invalid file. PDF/DOC/DOCX only, max 10 MB.';
+        header('Location: ' . BASE_URL . '/jobs/' . $job_id . '/apply');
+        exit;
+    }
+
+    // uploads/resumes/applications/[job_id]/[seeker_id]/
+    $snapDir = __DIR__ . '/../../uploads/resumes/applications/' . $job_id . '/' . $seeker_id;
+    if (!is_dir($snapDir)) {
+        mkdir($snapDir, 0755, true);
+    }
+
+    $ext         = pathinfo($_FILES['resume']['name'], PATHINFO_EXTENSION);
+    $name        = uniqid('cv_') . '.' . $ext;
+    $dest        = $snapDir . '/' . $name;
+    $resume_path = 'uploads/resumes/applications/' . $job_id . '/' . $seeker_id . '/' . $name;
+
+    move_uploaded_file($_FILES['resume']['tmp_name'], $dest);
+} else {
+    // Use existing resume from profile
+    try {
+        $stmt = $db->prepare("SELECT resume_path FROM job_seeker_profiles WHERE user_id = ?");
+        $stmt->execute([$seeker_id]);
+        $profile = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($profile && $profile['resume_path']) {
+            $resume_path = $profile['resume_path'];
+        } else {
+            $_SESSION['error'] = 'No resume found. Please upload a resume to apply.';
+            header('Location: ' . BASE_URL . '/jobs/' . $job_id . '/apply');
+            exit;
+        }
+    } catch (Exception $e) {
+        $_SESSION['error'] = 'An error occurred while fetching your resume.';
+        header('Location: ' . BASE_URL . '/jobs/' . $job_id . '/apply');
+        exit;
+    }
 }
-
-$allowed_mime = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-];
-$finfo = new finfo(FILEINFO_MIME_TYPE);
-$mime  = $finfo->file($_FILES['resume']['tmp_name']);
-$size  = $_FILES['resume']['size'];
-
-if (!in_array($mime, $allowed_mime) || $size > 10 * 1024 * 1024) {
-    $_SESSION['error'] = 'Invalid file. PDF/DOC/DOCX only, max 10 MB.';
-    header('Location: ' . BASE_URL . '/job-detail?id=' . $job_id);
-    exit;
-}
-
-// uploads/resumes/applications/[job_id]/[seeker_id]/
-$snapDir = __DIR__ . '/../../uploads/resumes/applications/' . $job_id . '/' . $seeker_id;
-if (!is_dir($snapDir)) {
-    mkdir($snapDir, 0755, true);
-}
-
-$ext         = pathinfo($_FILES['resume']['name'], PATHINFO_EXTENSION);
-$name        = uniqid('cv_') . '.' . $ext;
-$dest        = $snapDir . '/' . $name;
-$resume_path = 'uploads/resumes/applications/' . $job_id . '/' . $seeker_id . '/' . $name;
-
-move_uploaded_file($_FILES['resume']['tmp_name'], $dest);
 
 $db = getDB();
 try {

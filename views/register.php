@@ -36,7 +36,7 @@ unset($_SESSION['success']);
 
       <!-- Card Body -->
       <div class="px-8 py-6">
-        <form method="POST" action="../php/functions/register.php" id="regForm" class="space-y-5">
+        <form method="POST" action="/register" id="regForm" class="space-y-5">
 
           <!-- Email -->
           <div>
