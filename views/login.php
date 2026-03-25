@@ -81,10 +81,10 @@ unset($_SESSION['authError']);
           <div class="pt-1">
             <button
               type="submit"
-              class="w-full py-2.5 px-6 rounded-xl text-sm font-semibold text-white transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400"
-              style="background-color:#198754;"
-              onmouseover="this.style.backgroundColor='#157347'"
-              onmouseout="this.style.backgroundColor='#198754'">
+              class="w-full py-2.5 px-6 rounded-xl text-sm font-semibold text-white transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#7a7fd4]"
+              style="background-color:#7a7fd4;"
+              onmouseover="this.style.backgroundColor='#7a7fd4'"
+              onmouseout="this.style.backgroundColor='#8b91dd'">
               Sign In to Account
             </button>
           </div>

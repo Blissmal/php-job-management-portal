@@ -152,10 +152,10 @@ unset($_SESSION['success']);
               type="submit"
               id="submitBtn"
               disabled
-              class="w-full py-2.5 px-6 rounded-xl text-sm font-semibold text-white transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400 disabled:opacity-50 disabled:cursor-not-allowed"
-              style="background-color:#198754;"
-              onmouseover="if(!this.disabled) this.style.backgroundColor='#157347'"
-              onmouseout="this.style.backgroundColor='#198754'">
+              class="w-full py-2.5 px-6 rounded-xl text-sm font-semibold text-white transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#7a7fd4] disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background-color:#7a7fd4;"
+              onmouseover="this.style.backgroundColor='#7a7fd4'"
+              onmouseout="this.style.backgroundColor='#8b91dd'">
               Create Account
             </button>
           </div>
