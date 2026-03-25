@@ -50,6 +50,7 @@ function requireProfileComplete()
 {
     if (!isProfileComplete()) {
         $role = $_SESSION['role'] ?? 'seeker';
+        $_SESSION['profile_incomplete'] = true;
         if ($role === 'seeker') {
             header('Location: ' . BASE_URL . '/seeker/profile');
         } else {

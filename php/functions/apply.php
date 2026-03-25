@@ -1,7 +1,7 @@
 <?php
 
 /**
- * php/function/apply.php
+ * php/functions/apply.php
  * Both cover letter (min 50 chars) and resume are required.
  * Resumes are stored in: uploads/resumes/applications/[job_id]/[seeker_id]/
  */

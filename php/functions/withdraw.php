@@ -1,7 +1,7 @@
 <?php
 
 /**
- * php/function/withdraw.php
+ * php/functions/withdraw.php
  * Allows a seeker to withdraw a Pending application only.
  * Once Reviewed/Shortlisted/Hired/Rejected the employer has acted — withdrawal is blocked.
  */

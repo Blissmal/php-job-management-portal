@@ -34,7 +34,7 @@ unset($_SESSION['authError']);
 
       <!-- Card Body -->
       <div class="px-8 py-6">
-        <form method="POST" action="../php/function/login.php" class="space-y-5">
+        <form method="POST" action="../php/functions/login.php" class="space-y-5">
 
           <!-- Email -->
           <div>

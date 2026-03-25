@@ -1,7 +1,7 @@
 <?php
 
 /**
- * php/function/jobs.php
+ * php/functions/jobs.php
  * Accepts POST requests with 'action' create/edit/close/reopen and relevant job data.
  * Only accessible to users with 'employer' role.
  */

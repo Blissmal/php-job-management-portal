@@ -1,11 +1,11 @@
 <?php
 
 /**
- * php/function/admin.php
+ * php/functions/admin.php
  * Admin actions: activate/deactivate users, delete users.
  * Accepts POST requests with 'action' activate/deactivate/delete and 'user_id' all from the form.
  * Only accessible to users with 'admin' role.
- * 
+ *
  */
 require_once __DIR__ . '/../config/connection.php';
 if (session_status() === PHP_SESSION_NONE) session_start();

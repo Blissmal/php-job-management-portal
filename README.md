@@ -80,7 +80,7 @@ Core bootstrap files (configurations).
 
 ---
 
-### `/php/function/`
+### `/php/functions/`
 
 One file per server-side action. Each file is a POST or GET handler.
 

@@ -1,6 +1,11 @@
 <?php
+if (!defined('BASE_URL')) {
+    define('BASE_URL', rtrim((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'], '/'));
+}
 
 session_start();
+require_once 'php/config/profile_guard.php';
+
 // ─── Middleware ────────────────────────────────────────────────────────────────
 
 function requireAuth(): void
@@ -29,6 +34,28 @@ function requireRole(string ...$roles): void
     }
 }
 
+function requireSeeker(): void
+{
+    requireRole('seeker');
+}
+
+function requireEmployer(): void
+{
+    requireRole('employer');
+}
+
+function requireSeekerWithProfile(): void
+{
+    requireSeeker();
+    requireProfileComplete();
+}
+
+function requireEmployerWithProfile(): void
+{
+    requireEmployer();
+    requireProfileComplete();
+}
+
 // ─── Route definitions ─────────────────────────────────────────────────────────
 //
 //  Each route is:  [ 'METHOD', '/path', 'views/file.php', callable|null ]
@@ -42,17 +69,20 @@ $routes = [
     ['GET',  '/categories',           'views/categories.php',           null],
     ['GET',  '/jobs/:id',       'views/job-single.php',     null],
     ['GET',  '/employers',      'views/employers.php',      null],
-    ['GET',  '/post-a-job',     'views/post-a-job.php',     null],
-    ['POST', '/post-a-job',     'php/functions/store-job.php', 'requireAuth'],
+    ['GET',  '/post-a-job',     'views/post-a-job.php',     'requireEmployerWithProfile'],
+    ['POST', '/post-a-job',     'php/functions/store-job.php', 'requireEmployerWithProfile'],
     ['GET',  '/login',          'views/login.php',          'requireGuest'],
     ['POST', '/login',          'php/functions/login.php',  'requireGuest'],
     ['GET',  '/register',       'views/register.php',       'requireGuest'],
     ['POST', '/register',       'php/functions/register.php', 'requireGuest'],
-    ['GET',  '/seeker/profile',      'views/seeker/profile.php',      'requireAuth'],
+    ['GET',  '/seeker/dashboard',      'views/seeker/dashboard.php',      'requireSeekerWithProfile'],
+    ['GET',  '/seeker/saved-jobs',      'views/seeker/saved-jobs.php',      'requireSeekerWithProfile'],
+    ['GET',  '/seeker/applications',      'views/seeker/applications.php',      'requireSeekerWithProfile'],
+    ['GET',  '/seeker/profile',      'views/seeker/profile.php',      'requireSeeker'],
+    ['GET',  '/employer/dashboard',      'views/employer/dashboard.php',      'requireEmployerWithProfile'],
+    ['GET',  '/employer/profile',      'views/employer/profile.php',      'requireEmployer'],
     ['GET',  '/admin/profile',      'views/admin/profile.php',      'requireAuth'],
     ['GET',  '/logout',         'php/functions/logout.php', 'requireAuth'],
-    ['GET',  '/index',          'views/login.php',          null],
-    ['GET',  '/index.php',      'views/login.php',          null],
 ];
 
 // ─── Dispatcher ────────────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * php/function/profile.php
+ * php/functions/profile.php
  * Handles seeker profile update + resume upload, and employer profile update.
  * Seeker resumes are stored in: uploads/resumes/profiles/[user_id]/
  * Old profile resumes are deleted when a new one is uploaded.

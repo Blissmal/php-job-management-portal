@@ -1,6 +1,10 @@
-<?php include_once '../partials/header.php'; ?>
 <?php
 require_once __DIR__ . '/../../php/config/connection.php';
+include_once __DIR__ . '/../partials/header.php';
+include_once __DIR__ . '/../partials/sidebar.php';
+?>
+
+<?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 // Check if user is logged in and is an employer
@@ -19,8 +23,8 @@ $profile = $stmt->fetch();
 
 $error = $_SESSION['error'] ?? null;
 $success = $_SESSION['success'] ?? null;
-unset($_SESSION['error']);
-unset($_SESSION['success']);
+$profile_incomplete = $_SESSION['profile_incomplete'] ?? null;
+unset($_SESSION['error'], $_SESSION['success'], $_SESSION['profile_incomplete']);
 ?>
 
 <!-- Hero Banner -->
@@ -47,7 +51,7 @@ unset($_SESSION['success']);
 
             <!-- Card Body -->
             <div class="px-8 py-6">
-                <form method="POST" action="../../php/function/profile.php" class="space-y-5">
+                <form method="POST" action="../../php/functions/profile.php" class="space-y-5">
 
                     <!-- Company Name -->
                     <div>
@@ -136,6 +140,24 @@ unset($_SESSION['success']);
 </section>
 
 <?php include_once '../partials/footer.php'; ?>
+
+<?php if ($profile_incomplete): ?>
+    <script>
+        Swal.fire({
+            icon: 'info',
+            title: 'Profile Incomplete',
+            text: 'Please complete your company profile details before accessing the dashboard.',
+            confirmButtonColor: '#198754',
+            confirmButtonText: 'Got it',
+            background: '#fff',
+            customClass: {
+                popup: 'rounded-2xl',
+                title: 'text-lg font-semibold',
+                confirmButton: 'px-6 py-2 text-sm'
+            }
+        });
+    </script>
+<?php endif; ?>
 
 <?php if ($error): ?>
     <script>
