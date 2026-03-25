@@ -4,6 +4,16 @@ if (session_status() === PHP_SESSION_NONE) session_start();
 $connectionPath = __DIR__ . '/../../php/config/connection.php';
 if (file_exists($connectionPath)) require_once $connectionPath;
 
+// Fetch categories from database
+$categories = [];
+try {
+    $db = getDB();
+    $stmt = $db->query("SELECT category_id, category_name FROM job_categories ORDER BY category_name ASC");
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log("Error fetching categories: " . $e->getMessage());
+}
+
 $navUserName = $_SESSION['currentUserName'] ?? null;
 $navUserRole = $_SESSION['currentUserRole'] ?? null;
 $navUserId   = $_SESSION['currentUser']     ?? null;
@@ -48,7 +58,7 @@ include_once 'partials/header.php';
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="/php/functions/post-job.php" enctype="multipart/form-data" id="jobForm">
+        <form method="POST" action="../php/functions/jobs.php" enctype="multipart/form-data" id="jobForm">
 
             <!-- ════════════════════════════════════════════ -->
             <!--  SECTION 1: Job Details                      -->
@@ -82,11 +92,11 @@ include_once 'partials/header.php';
                         </div>
                     </div>
 
-                    <!-- Job Type + Salary + Career Level -->
+                    <!-- Job Type + Career Level + Experience -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="form-label" for="type">Job Type <span class="text-red-500">*</span></label>
-                            <select class="form-select" id="type" name="type" required>
+                            <label class="form-label" for="job_type">Job Type <span class="text-red-500">*</span></label>
+                            <select class="form-select" id="job_type" name="job_type" required>
                                 <option value="">Select type…</option>
                                 <option value="Full Time">Full Time</option>
                                 <option value="Part Time">Part Time</option>
@@ -94,100 +104,80 @@ include_once 'partials/header.php';
                                 <option value="Internship">Internship</option>
                                 <option value="Freelance">Freelance</option>
                                 <option value="Temporary">Temporary</option>
+                                <option value="Remote">Remote</option>
                             </select>
                         </div>
                         <div>
-                            <label class="form-label" for="salary">Job Salary <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="text" id="salary" name="salary" placeholder="e.g. KES 80,000">
+                            <label class="form-label" for="experience_level">Career Level <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
+                            <select class="form-select" id="experience_level" name="experience_level">
+                                <option value="Not specified">Not specified</option>
+                                <option value="Entry Level">Entry Level</option>
+                                <option value="Mid Level">Mid Level</option>
+                                <option value="Senior">Senior</option>
+                                <option value="Lead">Lead</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Executive">Executive</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="form-label" for="career_level">Career Level <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <select class="form-select" id="career_level" name="career_level">
-                                <option value="">Choose level…</option>
-                                <option>Entry Level</option>
-                                <option>Junior</option>
-                                <option>Mid Level</option>
-                                <option>Senior</option>
-                                <option>Lead, Manager, Senior</option>
-                                <option>Director</option>
-                                <option>Executive</option>
+                            <label class="form-label" for="required_qualification">Qualification <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
+                            <select class="form-select" id="required_qualification" name="required_qualification">
+                                <option value="Not specified">Not specified</option>
+                                <option value="High School">High School</option>
+                                <option value="Diploma">Diploma</option>
+                                <option value="Bachelor Degree">Bachelor Degree</option>
+                                <option value="Master Degree">Master Degree</option>
+                                <option value="PhD">PhD</option>
+                                <option value="Certification">Certification</option>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Experience + Industry + Qualification -->
+                    <!-- Salary Min + Salary Max + Years of Experience -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="form-label" for="experience">Experience <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <select class="form-select" id="experience" name="experience">
-                                <option value="">Choose…</option>
-                                <option>No Experience</option>
-                                <option>Less than 1 Year</option>
-                                <option>1-2 Years</option>
-                                <option>3-5 Years</option>
-                                <option>5-10 Years</option>
-                                <option>10+ Years</option>
-                            </select>
+                            <label class="form-label" for="salary_min">Minimum Salary <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
+                            <input class="form-input rounded-md" type="number" id="salary_min" name="salary_min" placeholder="e.g. 50000" min="0" step="1000">
                         </div>
                         <div>
-                            <label class="form-label" for="industry">Industry <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <select class="form-select" id="industry" name="industry">
-                                <option value="">Choose…</option>
-                                <option>Technology & IT</option>
-                                <option>Education & Training</option>
-                                <option>Finance & Banking</option>
-                                <option>Healthcare</option>
-                                <option>Engineering</option>
-                                <option>Media & Communications</option>
-                                <option>Retail & Consumer Goods</option>
-                                <option>Government & NGO</option>
-                                <option>Other</option>
-                            </select>
+                            <label class="form-label" for="salary_max">Maximum Salary <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
+                            <input class="form-input rounded-md" type="number" id="salary_max" name="salary_max" placeholder="e.g. 150000" min="0" step="1000">
                         </div>
                         <div>
-                            <label class="form-label" for="qualification">Qualification <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <select class="form-select" id="qualification" name="qualification">
-                                <option value="">Choose…</option>
-                                <option>Certificate</option>
-                                <option>Diploma</option>
-                                <option>Bachelor Degree</option>
-                                <option>Master Degree</option>
-                                <option>PhD / Doctorate</option>
-                                <option>No Requirement</option>
-                            </select>
+                            <label class="form-label">Years of Experience <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
+                            <div class="flex gap-2">
+                                <input class="form-input rounded-md" type="number" id="years_experience_min" name="years_experience_min" placeholder="Min" min="0" step="1" max="60">
+                                <input class="form-input rounded-md" type="number" id="years_experience_max" name="years_experience_max" placeholder="Max" min="0" step="1" max="60">
+                            </div>
                         </div>
                     </div>
 
                     <!-- Category -->
                     <div>
-                        <label class="form-label" for="category">Job Category <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                        <select class="form-select" id="category" name="category">
+                        <label class="form-label" for="category_id">Job Category <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
+                        <select class="form-select" id="category_id" name="category_id">
                             <option value="">Choose a category…</option>
-                            <option>Software Development</option>
-                            <option>Design & Creative</option>
-                            <option>Data & Analytics</option>
-                            <option>Marketing & Sales</option>
-                            <option>Customer Support</option>
-                            <option>Human Resources</option>
-                            <option>Finance & Accounting</option>
-                            <option>Legal</option>
-                            <option>Operations</option>
-                            <option>Education</option>
-                            <option>Healthcare</option>
-                            <option>Other</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?php echo (int)$category['category_id']; ?>">
+                                    <?php echo htmlspecialchars($category['category_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
 
                     <!-- Deadline -->
-                    <div>
-                        <label class="form-label" for="deadline">Application Deadline <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                        <input class="form-input rounded-md" type="date" id="deadline" name="deadline">
-                    </div>
-
-                    <!-- Application Email / URL -->
-                    <div>
-                        <label class="form-label" for="apply_link">Application Email or URL <span class="text-red-500">*</span></label>
-                        <input class="form-input rounded-md" type="text" id="apply_link" name="apply_link" placeholder="Enter an email address or application link" required>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label" for="deadline">Application Deadline <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
+                            <input class="form-input rounded-md" type="date" id="deadline" name="deadline">
+                        </div>
+                        <div class="flex flex-col justify-center">
+                            <label class="form-label">Featured Job</label>
+                            <label class="flex items-center gap-2.5 cursor-pointer mt-1">
+                                <input type="checkbox" name="featured" id="featured" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-400">
+                                <span class="text-sm text-slate-600">Promote this job (appears in featured section)</span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Description (Markdown Editor) -->
@@ -227,75 +217,6 @@ include_once 'partials/header.php';
 
                 </div>
             </div>
-
-            <!-- ════════════════════════════════════════════ -->
-            <!--  SECTION 2: Company Details                  -->
-            <!-- ════════════════════════════════════════════ -->
-            <div class="bg-white mb-6">
-                <div class="px-7 py-5 border-b border-slate-100 flex items-center gap-3">
-                    <span class="w-7 h-7 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center">2</span>
-                    <h2 class="text-base font-bold text-slate-800 tracking-tight">Company Details</h2>
-                </div>
-                <div class="px-7 py-6 space-y-5">
-
-                    <!-- Company Name -->
-                    <div>
-                        <label class="form-label" for="company_name">Company Name <span class="text-red-500">*</span></label>
-                        <input class="form-input rounded-md" type="text" id="company_name" name="company_name"
-                            placeholder="Enter the name of the company"
-                            value="<?php echo htmlspecialchars($navUserName ?? ''); ?>"
-                            required>
-                    </div>
-
-                    <!-- Website + Tagline -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="form-label" for="company_website">Website <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="url" id="company_website" name="company_website" placeholder="https://yourcompany.com">
-                        </div>
-                        <div>
-                            <label class="form-label" for="company_tagline">Tagline <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="text" id="company_tagline" name="company_tagline" placeholder="Briefly describe your company">
-                        </div>
-                    </div>
-
-                    <!-- Logo -->
-                    <div>
-                        <label class="form-label" for="company_logo">Company Logo <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                        <div class="flex items-center gap-4">
-                            <label for="company_logo"
-                                class="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50
-                       text-sm text-slate-500 hover:border-indigo-300 hover:bg-indigo-50 transition duration-150">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="17 8 12 3 7 8" />
-                                    <line x1="12" y1="3" x2="12" y2="15" />
-                                </svg>
-                                <span id="logoLabel">Choose file…</span>
-                            </label>
-                            <input type="file" id="company_logo" name="company_logo" accept="image/*" class="sr-only"
-                                onchange="document.getElementById('logoLabel').textContent = this.files[0]?.name || 'Choose file…'">
-                            <span class="text-xs text-slate-400">Max 2 MB · PNG, JPG, SVG</span>
-                        </div>
-                    </div>
-
-                    <!-- Email + Phone -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="form-label" for="company_email">Contact Email <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="email" id="company_email" name="company_email"
-                                placeholder="contact@company.com"
-                                value="<?php echo htmlspecialchars($_SESSION['currentUserEmail'] ?? ''); ?>">
-                        </div>
-                        <div>
-                            <label class="form-label" for="company_phone">Phone <span class="text-slate-400 font-normal text-xs">(optional)</span></label>
-                            <input class="form-input rounded-md" type="tel" id="company_phone" name="company_phone" placeholder="+254 700 000 000">
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
             <!-- ── Action Buttons ── -->
             <div class="flex items-center justify-end gap-3 pt-2">
                 <button type="button" id="draftBtn"

@@ -74,6 +74,8 @@ $routes = [
     ['GET',  '/jobs',           'views/jobs.php',           null],
     ['GET',  '/categories',           'views/categories.php',           null],
     ['GET',  '/jobs/:id',       'views/job-single.php',     null],
+    ['GET',  '/jobs/:id/apply',       'views/apply-job.php',     'requireSeekerWithProfile'],
+    ['POST', '/jobs/:id/apply',       'php/functions/apply.php',     'requireSeekerWithProfile'],
     ['GET',  '/employers',      'views/employers.php',      null],
     ['GET',  '/post-a-job',     'views/post-a-job.php',     'requireEmployerWithProfile'],
     ['POST', '/post-a-job',     'php/functions/store-job.php', 'requireEmployerWithProfile'],
@@ -94,6 +96,7 @@ $routes = [
     ['GET',  '/admin/employers',      'views/admin/employers.php',      'requireAdmin'],
     ['GET',  '/admin/jobs',           'views/admin/jobs.php',           'requireAdmin'],
     ['GET',  '/admin/applications',   'views/admin/applications.php',   'requireAdmin'],
+    ['GET',  '/admin/categories',     'views/admin/categories.php',     'requireAdmin'],
     ['GET',  '/admin/admins',         'views/admin/admins.php',         'requireAdmin'],
     ['GET',  '/admin/profile',      'views/admin/profile.php',      'requireAuth'],
     ['GET',  '/logout',         'php/functions/logout.php', 'requireAuth'],
@@ -165,4 +168,3 @@ function handleDashboardRedirect(): void
     header("Location: $path");
     exit;
 }
-

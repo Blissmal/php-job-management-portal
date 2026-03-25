@@ -22,13 +22,22 @@ $employer_id = (int)$_SESSION['user_id'];
 $db          = getDB();
 
 if ($action === 'create' || $action === 'edit') {
+    // Required fields
     $title       = trim($_POST['title'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+
+    // Optional fields
     $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
     $location    = trim($_POST['location'] ?? '');
+    $job_type    = trim($_POST['job_type'] ?? 'Full Time');
     $salary_min  = !empty($_POST['salary_min']) ? (float)$_POST['salary_min'] : null;
     $salary_max  = !empty($_POST['salary_max']) ? (float)$_POST['salary_max'] : null;
-    $description = trim($_POST['description'] ?? '');
+    $experience_level = trim($_POST['experience_level'] ?? 'Not specified');
+    $required_qualification = trim($_POST['required_qualification'] ?? 'Not specified');
+    $years_experience_min = !empty($_POST['years_experience_min']) ? (int)$_POST['years_experience_min'] : null;
+    $years_experience_max = !empty($_POST['years_experience_max']) ? (int)$_POST['years_experience_max'] : null;
     $deadline    = !empty($_POST['deadline']) ? $_POST['deadline'] : null;
+    $featured    = isset($_POST['featured']) ? 1 : 0;
 
     if (empty($title) || empty($description)) {
         $_SESSION['error'] = 'Title and description are required.';
@@ -48,9 +57,26 @@ if ($action === 'create' || $action === 'edit') {
     }
 
     if ($action === 'create') {
-        $db->prepare("INSERT INTO jobs (employer_id, title, category_id, location, salary_min, salary_max, description, deadline)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-            ->execute([$employer_id, $title, $category_id, $location, $salary_min, $salary_max, $description, $deadline]);
+        $db->prepare("INSERT INTO jobs (employer_id, title, category_id, location, job_type, salary_min, salary_max,
+                                        experience_level, required_qualification, years_experience_min, years_experience_max,
+                                        description, deadline, featured)
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+            ->execute([
+                $employer_id,
+                $title,
+                $category_id,
+                $location,
+                $job_type,
+                $salary_min,
+                $salary_max,
+                $experience_level,
+                $required_qualification,
+                $years_experience_min,
+                $years_experience_max,
+                $description,
+                $deadline,
+                $featured
+            ]);
         $_SESSION['success'] = 'Job posted successfully.';
     } else {
         $job_id = (int)($_POST['job_id'] ?? 0);
@@ -62,8 +88,25 @@ if ($action === 'create' || $action === 'edit') {
             http_response_code(403);
             exit;
         }
-        $db->prepare("UPDATE jobs SET title=?, category_id=?, location=?, salary_min=?, salary_max=?, description=?, deadline=? WHERE job_id=?")
-            ->execute([$title, $category_id, $location, $salary_min, $salary_max, $description, $deadline, $job_id]);
+        $db->prepare("UPDATE jobs SET title=?, category_id=?, location=?, job_type=?, salary_min=?, salary_max=?,
+                                      experience_level=?, required_qualification=?, years_experience_min=?, years_experience_max=?,
+                                      description=?, deadline=?, featured=? WHERE job_id=?")
+            ->execute([
+                $title,
+                $category_id,
+                $location,
+                $job_type,
+                $salary_min,
+                $salary_max,
+                $experience_level,
+                $required_qualification,
+                $years_experience_min,
+                $years_experience_max,
+                $description,
+                $deadline,
+                $featured,
+                $job_id
+            ]);
         $_SESSION['success'] = 'Job updated.';
     }
 } elseif ($action === 'close') {

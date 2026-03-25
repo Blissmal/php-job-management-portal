@@ -3,7 +3,14 @@
 // Must run BEFORE header (which starts the session and loads connection)
 require_once 'php/config/connection.php';
 
-$job_id = (int)($_ROUTE['id'] ?? 0);
+$id = $_ROUTE['id'] ?? '';
+if (!ctype_digit($id)) {
+    http_response_code(404);
+    exit('Invalid job ID');
+}
+$job_id = (int)$id;
+error_log($job_id);
+error_log($_ROUTE['id']);
 
 if ($job_id <= 0) {
     http_response_code(404);
@@ -63,7 +70,7 @@ try {
             FROM jobs j
             JOIN employer_profiles ep ON j.employer_id = ep.user_id
             LEFT JOIN job_categories jc ON j.category_id = jc.category_id
-            WHERE j.job_id = ? 
+            WHERE j.job_id = ?
             AND j.status = 'open'
     ");
     $stmt->execute([$job_id]);
