@@ -22,7 +22,7 @@ unset($_SESSION['authError']);
 </section>
 
 <!-- Login Form -->
-<section class="flex items-start justify-center py-20">
+<section class="flex items-start justify-center py-14">
   <div class="w-full max-w-md mx-4relative z-20">
     <div class="bg-white">
 
