@@ -12,7 +12,7 @@ if ($job_id <= 0) {
 }
 
 // Get current employer
-$employer_id = $_SESSION['currentUser'] ?? null;
+$employer_id = $_SESSION['user_id'] ?? null;
 if (!$employer_id) {
     header('Location: /login');
     exit;
@@ -23,16 +23,16 @@ $job = null;
 $categories = [];
 try {
     $db = getDB();
-    
+
     // Fetch categories
     $stmt = $db->query("SELECT category_id, category_name FROM job_categories ORDER BY category_name ASC");
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Fetch job
     $stmt = $db->prepare("SELECT * FROM jobs WHERE job_id = ? AND employer_id = ?");
     $stmt->execute([$job_id, $employer_id]);
     $job = $stmt->fetch(PDO::FETCH_ASSOC);
-    
+
     if (!$job) {
         header('Location: /employer/jobs');
         exit;
@@ -43,10 +43,10 @@ try {
     exit;
 }
 
-$navUserName = $_SESSION['currentUserName'] ?? null;
-$navUserRole = $_SESSION['currentUserRole'] ?? null;
-$navUserId   = $_SESSION['currentUser']     ?? null;
-$isLoggedIn  = isset($_SESSION['currentUser']);
+$navUserName = $_SESSION['name'] ?? null;
+$navUserRole = $_SESSION['role'] ?? null;
+$navUserId   = $_SESSION['user_id']     ?? null;
+$isLoggedIn  = isset($_SESSION['user_id']);
 
 // Get error/success messages
 $error = $_SESSION['error'] ?? null;
@@ -103,7 +103,7 @@ include_once 'partials/header.php';
                     <!-- Job Title -->
                     <div>
                         <label class="form-label" for="title">Job Title <span class="text-red-500">*</span></label>
-                        <input class="form-input rounded-md" type="text" id="title" name="title" placeholder="e.g. Senior Software Engineer" 
+                        <input class="form-input rounded-md" type="text" id="title" name="title" placeholder="e.g. Senior Software Engineer"
                             value="<?php echo htmlspecialchars($job['title']); ?>" required>
                     </div>
 
@@ -353,7 +353,8 @@ include_once 'partials/header.php';
         margin-bottom: 0.4rem;
     }
 
-    .prose ul, .prose ol {
+    .prose ul,
+    .prose ol {
         padding-left: 1.5rem;
         margin-bottom: 0.5rem;
     }
@@ -434,7 +435,7 @@ include_once 'partials/header.php';
      */
     const form = document.getElementById('jobForm');
     if (form) {
-        form.addEventListener('submit', function (e) {
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
 
             const title = document.getElementById('title')?.value?.trim() || '';
