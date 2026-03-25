@@ -236,11 +236,21 @@ try {
                         Edit Job
                     </a>
                 <?php else: ?>
-                    <a href="/jobs/<?php echo (int)$job['job_id']; ?>/apply"
-                        class="w-full block text-center bg-[#fb236a] hover:bg-[#e01060] text-white font-semibold text-base
-                    py-4 rounded-lg shadow transition-colors duration-200">
-                        Apply for this job
-                    </a>
+                    <div class="flex flex-col gap-3">
+                        <a href="/jobs/<?php echo (int)$job['job_id']; ?>/apply"
+                            class="w-full block text-center bg-[#fb236a] hover:bg-[#e01060] text-white font-semibold text-base
+                        py-4 rounded-lg shadow transition-colors duration-200">
+                            Apply for this job
+                        </a>
+                        <form method="POST" action="php/functions/save-job.php" class="w-full">
+                            <input type="hidden" name="job_id" value="<?php echo (int)$job['job_id']; ?>">
+                            <button type="submit"
+                                class="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold text-sm rounded-lg hover:border-[#fb236a] hover:text-[#fb236a] transition-colors duration-200 flex items-center justify-center gap-2">
+                                <i data-lucide="bookmark" class="w-4 h-4"></i>
+                                Save Job
+                            </button>
+                        </form>
+                    </div>
                 <?php endif; ?>
 
                 <!-- Job Overview -->

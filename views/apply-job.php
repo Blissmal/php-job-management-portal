@@ -59,13 +59,25 @@ try {
     // Check if user has already applied
     $seeker_id = $_SESSION['user_id'] ?? null;
     $already_applied = false;
+    $current_resume = null;
+
     if ($seeker_id) {
+        // Check if already applied
         $checkStmt = $db->prepare("
             SELECT 1 FROM applications
             WHERE job_id = ? AND seeker_id = ?
         ");
         $checkStmt->execute([$job_id, $seeker_id]);
         $already_applied = (bool)$checkStmt->fetch();
+
+        // Fetch current resume from profile
+        $resumeStmt = $db->prepare("
+            SELECT resume_path FROM job_seeker_profiles
+            WHERE user_id = ?
+        ");
+        $resumeStmt->execute([$seeker_id]);
+        $profileData = $resumeStmt->fetch(PDO::FETCH_ASSOC);
+        $current_resume = $profileData['resume_path'] ?? null;
     }
 } catch (Exception $e) {
     http_response_code(500);
@@ -158,8 +170,25 @@ try {
                             <label for="resume" class="block text-sm font-semibold text-gray-900 mb-2">
                                 Resume <span class="text-red-500">*</span>
                             </label>
+
+                            <?php if ($current_resume): ?>
+                                <!-- Current Resume Section -->
+                                <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                    <div class="flex items-start gap-3">
+                                        <i data-lucide="check-circle" class="w-5 h-5 text-green-600 shrink-0 mt-0.5"></i>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-green-900">Current Resume on File</p>
+                                            <p class="text-xs text-green-700 mt-1">
+                                                <?php echo htmlspecialchars(basename($current_resume)); ?>
+                                            </p>
+                                            <p class="text-xs text-green-600 mt-2">We'll use this resume for your application unless you upload a new one.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
                             <p class="text-xs text-gray-500 mb-3">
-                                Upload your resume in PDF, DOC, or DOCX format. Max size: 10 MB.
+                                <?php echo $current_resume ? 'Upload a new resume to replace your current one (optional), or leave blank to use your current resume.' : 'Upload your resume in PDF, DOC, or DOCX format. Max size: 10 MB.'; ?>
                             </p>
                             <div class="relative">
                                 <input
@@ -167,7 +196,7 @@ try {
                                     id="resume"
                                     name="resume"
                                     accept=".pdf,.doc,.docx"
-                                    required
+                                    <?php echo !$current_resume ? 'required' : ''; ?>
                                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     aria-label="Upload resume">
                                 <div class="px-6 py-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer text-center">

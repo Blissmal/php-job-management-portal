@@ -389,11 +389,11 @@ include_once 'partials/header.php';
             previewEl.innerHTML = parseMarkdown(textarea.value) || '<span class="text-slate-400 text-sm italic">Nothing to preview yet…</span>';
             previewEl.classList.remove('hidden');
             textarea.classList.add('hidden');
-            previewBtn.textContent = 'Edit';
+            previewBtn?.textContent = 'Edit';
         } else {
             previewEl.classList.add('hidden');
             textarea.classList.remove('hidden');
-            previewBtn.textContent = 'Preview';
+            previewBtn?.textContent = 'Preview';
         }
     }
 
@@ -403,10 +403,10 @@ include_once 'partials/header.php';
         new FormData(document.getElementById('jobForm')).forEach((v, k) => data[k] = v);
         sessionStorage.setItem('jobDraft', JSON.stringify(data));
         const btn = document.getElementById('draftBtn');
-        btn.textContent = '✓ Draft Saved';
+        btn?.textContent = '✓ Draft Saved';
         btn.classList.add('border-[#d5225bc2]', 'text-[#D5225A]');
         setTimeout(() => {
-            btn.textContent = 'Save Draft';
+            btn?.textContent = 'Save Draft';
             btn.classList.remove('border-[#d5225bc2]', 'text-[#D5225A]');
         }, 2000);
     });
@@ -453,9 +453,9 @@ include_once 'partials/header.php';
 
         // Show loading state
         const submitBtn = document.getElementById('submitBtn');
-        const originalText = submitBtn.textContent;
+        const originalText = submitBtn?.textContent;
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Posting Job...';
+        submitBtn?.textContent = 'Posting Job...';
 
         try {
             // Submit the form
@@ -470,7 +470,7 @@ include_once 'partials/header.php';
 
             showError('An unexpected error occurred: ' + error.message);
             submitBtn.disabled = false;
-            submitBtn.textContent = originalText;
+            submitBtn?.textContent = originalText;
         }
     });
 
@@ -514,8 +514,8 @@ include_once 'partials/header.php';
         const errorAlert = document.getElementById('errorAlert');
         if (errorAlert) {
             const errorParagraph = errorAlert.querySelector('p');
-            if (errorParagraph && errorParagraph.textContent) {
-                const errorMsg = errorParagraph.textContent || 'An error occurred';
+            if (errorParagraph && errorParagraph?.textContent) {
+                const errorMsg = errorParagraph?.textContent || 'An error occurred';
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -536,8 +536,8 @@ include_once 'partials/header.php';
         const successAlert = document.getElementById('successAlert');
         if (successAlert) {
             const successParagraph = successAlert.querySelector('p');
-            if (successParagraph && successParagraph.textContent) {
-                const successMsg = successParagraph.textContent || 'Success!';
+            if (successParagraph && successParagraph?.textContent) {
+                const successMsg = successParagraph?.textContent || 'Success!';
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
