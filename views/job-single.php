@@ -89,6 +89,14 @@ try {
 
     // Check if current user is the owner of this job
     $is_owner = ($is_employer && $current_user_id === (int)$row['employer_id']);
+    
+    // Check if job is saved (for seekers)
+    $is_saved = false;
+    if ($current_user_id && $current_user_role === 'seeker') {
+        $checkSaved = $db->prepare("SELECT save_id FROM saved_jobs WHERE seeker_id = ? AND job_id = ?");
+        $checkSaved->execute([$current_user_id, $job_id]);
+        $is_saved = (bool)$checkSaved->fetch();
+    }
 
     // ── Map DB row to template-friendly shape ─────────────────────────────────
     $palettes = [
@@ -242,14 +250,13 @@ try {
                         py-4 rounded-lg shadow transition-colors duration-200">
                             Apply for this job
                         </a>
-                        <form method="POST" action="php/functions/save-job.php" class="w-full">
-                            <input type="hidden" name="job_id" value="<?php echo (int)$job['job_id']; ?>">
-                            <button type="submit"
-                                class="w-full px-4 py-3 border-2 border-gray-300 text-gray-700 font-semibold text-sm rounded-lg hover:border-[#fb236a] hover:text-[#fb236a] transition-colors duration-200 flex items-center justify-center gap-2">
-                                <i data-lucide="bookmark" class="w-4 h-4"></i>
-                                Save Job
-                            </button>
-                        </form>
+                        <button type="button" id="saveJobBtn"
+                            class="w-full px-4 py-3 border-2 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 <?php echo $is_saved ? 'border-[#fb236a] text-[#fb236a] bg-pink-50' : 'border-gray-300 text-gray-700 hover:border-[#fb236a] hover:text-[#fb236a]'; ?>"
+                            data-job-id="<?php echo (int)$job['job_id']; ?>"
+                            data-is-saved="<?php echo $is_saved ? 'true' : 'false'; ?>">
+                            <i data-lucide="bookmark" class="w-4 h-4"></i>
+                            <span id="saveJobBtnText"><?php echo $is_saved ? 'Saved' : 'Save Job'; ?></span>
+                        </button>
                     </div>
                 <?php endif; ?>
 
@@ -296,5 +303,144 @@ try {
     </div>
 
 </main>
+
+<!-- Save/Unsave Modal -->
+<div id="saveJobModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
+        <h2 id="modalTitle" class="text-xl font-bold text-gray-900 mb-2">Save Job</h2>
+        <p id="modalMessage" class="text-gray-600 text-sm mb-6">Save this job to your list for later?</p>
+        <div class="flex gap-3">
+            <button id="modalCancelBtn" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors">
+                Cancel
+            </button>
+            <button id="modalConfirmBtn" class="flex-1 px-4 py-2 bg-[#fb236a] text-white font-semibold rounded-lg hover:bg-[#e01060] transition-colors">
+                Continue
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Wait for SweetAlert2 and Lucide to load
+    document.addEventListener('DOMContentLoaded', () => {
+        const saveJobBtn = document.getElementById('saveJobBtn');
+        const modal = document.getElementById('saveJobModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCancelBtn = document.getElementById('modalCancelBtn');
+        const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+        const saveJobBtnText = document.getElementById('saveJobBtnText');
+        
+        if (!saveJobBtn) return;
+        
+        let actionType = 'save'; // 'save' or 'unsave'
+        
+        saveJobBtn.addEventListener('click', () => {
+            const isSaved = saveJobBtn.dataset.isSaved === 'true';
+            actionType = isSaved ? 'unsave' : 'save';
+            
+            // Update modal content based on action
+            if (actionType === 'save') {
+                modalTitle.textContent = 'Save Job';
+                modalMessage.textContent = 'Save this job to your list for later?';
+                modalConfirmBtn.textContent = 'Save';
+                modalConfirmBtn.className = 'flex-1 px-4 py-2 bg-[#fb236a] text-white font-semibold rounded-lg hover:bg-[#e01060] transition-colors';
+            } else {
+                modalTitle.textContent = 'Unsave Job';
+                modalMessage.textContent = 'Remove this job from your saved list?';
+                modalConfirmBtn.textContent = 'Unsave';
+                modalConfirmBtn.className = 'flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors';
+            }
+            
+            // Show modal
+            modal.classList.remove('hidden');
+        });
+        
+        modalCancelBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+        
+        modalConfirmBtn.addEventListener('click', async () => {
+            const jobId = saveJobBtn.dataset.jobId;
+            
+            try {
+                const response = await fetch('/php/functions/save-job.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `job_id=${jobId}&action=${actionType}`
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Close modal
+                    modal.classList.add('hidden');
+                    
+                    // Update button state
+                    const isSaved = actionType === 'save';
+                    saveJobBtn.dataset.isSaved = isSaved ? 'true' : 'false';
+                    saveJobBtnText.textContent = isSaved ? 'Saved' : 'Save Job';
+                    
+                    if (isSaved) {
+                        saveJobBtn.classList.remove('border-gray-300', 'text-gray-700', 'hover:border-[#fb236a]', 'hover:text-[#fb236a]');
+                        saveJobBtn.classList.add('border-[#fb236a]', 'text-[#fb236a]', 'bg-pink-50');
+                    } else {
+                        saveJobBtn.classList.remove('border-[#fb236a]', 'text-[#fb236a]', 'bg-pink-50');
+                        saveJobBtn.classList.add('border-gray-300', 'text-gray-700', 'hover:border-[#fb236a]', 'hover:text-[#fb236a]');
+                    }
+                    
+                    // Show success message
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: result.message,
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                } else {
+                    // Show error
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: result.message || 'Something went wrong',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                    }
+                    modal.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to save/unsave job',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+                modal.classList.add('hidden');
+            }
+        });
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+    });
+</script>
 
 <?php include_once 'partials/footer.php'; ?>
