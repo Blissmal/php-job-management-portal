@@ -139,15 +139,37 @@ try {
             </div>
 
             <?php if ($already_applied): ?>
-                <!-- Already Applied Message -->
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-                    <div class="flex gap-4">
-                        <i data-lucide="alert-circle" class="w-6 h-6 text-yellow-600 shrink-0 mt-0.5"></i>
-                        <div>
-                            <h3 class="font-semibold text-yellow-900 mb-1">Already Applied</h3>
-                            <p class="text-sm text-yellow-800">You have already submitted an application for this position. You can only submit one application per job.</p>
-                            <a href="/seeker/applications" class="inline-block mt-3 text-sm font-medium text-yellow-700 hover:text-yellow-900">
-                                View your applications →
+                <!-- Already Applied Section -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <!-- Form Header -->
+                    <div class="px-8 py-6 border-b border-gray-200 bg-gray-50">
+                        <h2 class="text-lg font-bold text-gray-900">Application Status</h2>
+                        <p class="text-sm text-gray-600 mt-1">You have already applied for this position.</p>
+                    </div>
+
+                    <!-- Already Applied Message -->
+                    <div class="px-8 py-8">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                            <div class="flex gap-4">
+                                <i data-lucide="check-circle" class="w-6 h-6 text-yellow-600 shrink-0 mt-0.5"></i>
+                                <div>
+                                    <h3 class="font-semibold text-yellow-900 mb-1">Already Applied</h3>
+                                    <p class="text-sm text-yellow-800">You have already submitted an application for this position. You can only submit one application per job.</p>
+                                    <p class="text-xs text-yellow-700 mt-2">To modify your application, please withdraw it first and reapply with updated information.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Button -->
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <a href="/seeker/applications"
+                                class="flex-1 text-center px-6 py-3 bg-[#2b9a66] hover:bg-[#1e7047] text-white font-semibold rounded-lg shadow transition-colors duration-200 flex items-center justify-center gap-2">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                                View My Applications
+                            </a>
+                            <a href="/jobs/<?php echo (int)$job['job_id']; ?>"
+                                class="flex-1 text-center px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                                Back to Job
                             </a>
                         </div>
                     </div>
