@@ -37,10 +37,11 @@ while ($row = $stmt->fetch()) {
     $stats[$row['status']] = $row['count'];
 }
 
-$pendingCount = $stats['pending'] ?? 0;
-$acceptedCount = $stats['accepted'] ?? 0;
-$rejectedCount = $stats['rejected'] ?? 0;
-$totalApplications = $pendingCount + $acceptedCount + $rejectedCount;
+// Status values are stored Title Case by update_status.php: Pending, Reviewed, Shortlisted, Hired, Rejected
+$pendingCount      = ($stats['Pending'] ?? 0) + ($stats['Reviewed'] ?? 0) + ($stats['Shortlisted'] ?? 0);
+$acceptedCount     = $stats['Hired']    ?? 0;
+$rejectedCount     = $stats['Rejected'] ?? 0;
+$totalApplications = array_sum($stats);
 
 // Fetch recent applications
 $stmt = $db->prepare("
@@ -160,16 +161,20 @@ include_once __DIR__ . '/../partials/header.php';
                         <tbody>
                             <?php foreach ($recentApplications as $app):
                                 $statusColor = match ($app['status']) {
-                                    'pending' => 'bg-yellow-50 text-yellow-700',
-                                    'accepted' => 'bg-green-50 text-green-700',
-                                    'rejected' => 'bg-red-50 text-red-700',
-                                    default => 'bg-slate-50 text-slate-700'
+                                    'Pending'     => 'bg-yellow-50 text-yellow-700',
+                                    'Reviewed'    => 'bg-blue-50 text-blue-700',
+                                    'Shortlisted' => 'bg-purple-50 text-purple-700',
+                                    'Hired'       => 'bg-green-50 text-green-700',
+                                    'Rejected'    => 'bg-red-50 text-red-700',
+                                    default       => 'bg-slate-50 text-slate-700'
                                 };
                                 $statusIcon = match ($app['status']) {
-                                    'pending' => 'clock',
-                                    'accepted' => 'check-circle',
-                                    'rejected' => 'x-circle',
-                                    default => 'help-circle'
+                                    'Pending'     => 'clock',
+                                    'Reviewed'    => 'eye',
+                                    'Shortlisted' => 'star',
+                                    'Hired'       => 'check-circle',
+                                    'Rejected'    => 'x-circle',
+                                    default       => 'help-circle'
                                 };
                             ?>
                                 <tr class="border-b border-slate-200 hover:bg-slate-50 transition-colors">

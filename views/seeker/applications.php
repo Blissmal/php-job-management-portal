@@ -18,9 +18,9 @@ $stats = [];
 while ($row = $stmt->fetch()) {
     $stats[$row['status']] = $row['count'];
 }
-$pendingCount  = $stats['pending']  ?? 0;
-$acceptedCount = $stats['accepted'] ?? 0;
-$rejectedCount = $stats['rejected'] ?? 0;
+$pendingCount  = ($stats['Pending'] ?? 0) + ($stats['Reviewed'] ?? 0) + ($stats['Shortlisted'] ?? 0);
+$acceptedCount = $stats['Hired']    ?? 0;
+$rejectedCount = $stats['Rejected'] ?? 0;
 $totalApplications = $pendingCount + $acceptedCount + $rejectedCount;
 
 // Filters
@@ -119,8 +119,8 @@ include_once __DIR__ . '/../partials/header.php';
                 </div>
             </a>
 
-            <a href="?status=pending"
-                class="bg-white rounded-lg border <?php echo $statusFilter === 'pending' ? 'border-yellow-400 ring-2 ring-yellow-100' : 'border-slate-200'; ?> p-5 hover:shadow-md transition-shadow">
+            <a href="?status=Pending"
+                class="bg-white rounded-lg border <?php echo $statusFilter === 'Pending' ? 'border-yellow-400 ring-2 ring-yellow-100' : 'border-slate-200'; ?> p-5 hover:shadow-md transition-shadow">
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-slate-600 text-sm font-medium">Pending</p>
@@ -132,11 +132,11 @@ include_once __DIR__ . '/../partials/header.php';
                 </div>
             </a>
 
-            <a href="?status=accepted"
-                class="bg-white rounded-lg border <?php echo $statusFilter === 'accepted' ? 'border-green-400 ring-2 ring-green-100' : 'border-slate-200'; ?> p-5 hover:shadow-md transition-shadow">
+            <a href="?status=Hired"
+                class="bg-white rounded-lg border <?php echo $statusFilter === 'Hired' ? 'border-green-400 ring-2 ring-green-100' : 'border-slate-200'; ?> p-5 hover:shadow-md transition-shadow">
                 <div class="flex items-start justify-between">
                     <div>
-                        <p class="text-slate-600 text-sm font-medium">Accepted</p>
+                        <p class="text-slate-600 text-sm font-medium">Hired</p>
                         <p class="text-2xl font-bold text-green-600 mt-1"><?php echo $acceptedCount; ?></p>
                     </div>
                     <div class="bg-green-50 rounded-lg p-2">
@@ -145,8 +145,8 @@ include_once __DIR__ . '/../partials/header.php';
                 </div>
             </a>
 
-            <a href="?status=rejected"
-                class="bg-white rounded-lg border <?php echo $statusFilter === 'rejected' ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200'; ?> p-5 hover:shadow-md transition-shadow">
+            <a href="?status=Rejected"
+                class="bg-white rounded-lg border <?php echo $statusFilter === 'Rejected' ? 'border-red-400 ring-2 ring-red-100' : 'border-slate-200'; ?> p-5 hover:shadow-md transition-shadow">
                 <div class="flex items-start justify-between">
                     <div>
                         <p class="text-slate-600 text-sm font-medium">Rejected</p>
@@ -187,9 +187,9 @@ include_once __DIR__ . '/../partials/header.php';
                            focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent
                            focus:bg-white transition duration-150">
                     <option value="all" <?php echo $statusFilter === 'all'      ? 'selected' : ''; ?>>All Statuses</option>
-                    <option value="pending" <?php echo $statusFilter === 'pending'  ? 'selected' : ''; ?>>Pending</option>
-                    <option value="accepted" <?php echo $statusFilter === 'accepted' ? 'selected' : ''; ?>>Accepted</option>
-                    <option value="rejected" <?php echo $statusFilter === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                <option value="Pending"     <?php echo $statusFilter === 'Pending'     ? 'selected' : ''; ?>>Pending / In Review</option>
+                    <option value="Hired"       <?php echo $statusFilter === 'Hired'       ? 'selected' : ''; ?>>Hired</option>
+                    <option value="Rejected"    <?php echo $statusFilter === 'Rejected'    ? 'selected' : ''; ?>>Rejected</option>
                 </select>
 
                 <button type="submit"
@@ -231,10 +231,12 @@ include_once __DIR__ . '/../partials/header.php';
                     }
 
                     $statusConfig = match ($app['status']) {
-                        'pending'  => ['badge' => 'bg-yellow-50 text-yellow-700 border border-yellow-200', 'icon' => 'clock',        'label' => 'Pending'],
-                        'accepted' => ['badge' => 'bg-green-50  text-green-700  border border-green-200',  'icon' => 'check-circle', 'label' => 'Accepted'],
-                        'rejected' => ['badge' => 'bg-red-50    text-red-700    border border-red-200',    'icon' => 'x-circle',     'label' => 'Rejected'],
-                        default    => ['badge' => 'bg-slate-50  text-slate-700  border border-slate-200',  'icon' => 'help-circle',  'label' => ucfirst($app['status'])],
+                        'Pending'     => ['badge' => 'bg-yellow-50 text-yellow-700 border border-yellow-200',  'icon' => 'clock',        'label' => 'Pending'],
+                        'Reviewed'    => ['badge' => 'bg-blue-50   text-blue-700   border border-blue-200',    'icon' => 'eye',          'label' => 'Reviewed'],
+                        'Shortlisted' => ['badge' => 'bg-purple-50 text-purple-700 border border-purple-200',  'icon' => 'star',         'label' => 'Shortlisted'],
+                        'Hired'       => ['badge' => 'bg-green-50  text-green-700  border border-green-200',   'icon' => 'check-circle', 'label' => 'Hired'],
+                        'Rejected'    => ['badge' => 'bg-red-50    text-red-700    border border-red-200',     'icon' => 'x-circle',     'label' => 'Rejected'],
+                        default       => ['badge' => 'bg-slate-50  text-slate-700  border border-slate-200',   'icon' => 'help-circle',  'label' => ucfirst($app['status'])],
                     };
                 ?>
                     <div class="bg-white rounded-lg border border-slate-200 p-6 hover:shadow-lg transition-shadow">
@@ -306,7 +308,7 @@ include_once __DIR__ . '/../partials/header.php';
                                     style="background-color:#8b91dd;">
                                     View Job
                                 </a>
-                                <?php if ($app['status'] === 'pending'): ?>
+                                <?php if ($app['status'] === 'Pending'): ?>
                                     <button
                                         onclick="withdrawApplication(<?php echo $app['app_id']; ?>)"
                                         class="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg
