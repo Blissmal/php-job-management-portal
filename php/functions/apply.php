@@ -88,20 +88,18 @@ try {
         "INSERT INTO applications (job_id, seeker_id, resume_snapshot_path, cover_letter)
          VALUES (?, ?, ?, ?)"
     )->execute([$job_id, $seeker_id, $resume_path, $cover]);
-    $_SESSION['success'] = 'Application submitted successfully!';
+
+    header('Location: ' . BASE_URL . '/seeker/applications?applied=1');
+    exit;
 } catch (PDOException $e) {
     if ($e->getCode() == 23000) {
-        if (file_exists($dest)) {
-            unlink($dest);
-        }
+        if (!empty($dest) && file_exists($dest)) unlink($dest);
         $_SESSION['error'] = 'You have already applied for this job.';
     } else {
-        if (file_exists($dest)) {
-            unlink($dest);
-        }
+        if (!empty($dest) && file_exists($dest)) unlink($dest);
         throw $e;
     }
 }
 
-header('Location: ' . BASE_URL . '/dashboard');
+header('Location: ' . BASE_URL . '/jobs/' . $job_id . '/apply');
 exit;

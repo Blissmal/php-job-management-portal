@@ -187,9 +187,9 @@ include_once __DIR__ . '/../partials/header.php';
                            focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent
                            focus:bg-white transition duration-150">
                     <option value="all" <?php echo $statusFilter === 'all'      ? 'selected' : ''; ?>>All Statuses</option>
-                <option value="Pending"     <?php echo $statusFilter === 'Pending'     ? 'selected' : ''; ?>>Pending / In Review</option>
-                    <option value="Hired"       <?php echo $statusFilter === 'Hired'       ? 'selected' : ''; ?>>Hired</option>
-                    <option value="Rejected"    <?php echo $statusFilter === 'Rejected'    ? 'selected' : ''; ?>>Rejected</option>
+                    <option value="Pending" <?php echo $statusFilter === 'Pending'     ? 'selected' : ''; ?>>Pending / In Review</option>
+                    <option value="Hired" <?php echo $statusFilter === 'Hired'       ? 'selected' : ''; ?>>Hired</option>
+                    <option value="Rejected" <?php echo $statusFilter === 'Rejected'    ? 'selected' : ''; ?>>Rejected</option>
                 </select>
 
                 <button type="submit"
@@ -309,10 +309,15 @@ include_once __DIR__ . '/../partials/header.php';
                                     View Job
                                 </a>
                                 <?php if ($app['status'] === 'Pending'): ?>
+                                    <form id="withdraw-form-<?php echo $app['app_id']; ?>" method="POST" action="/php/functions/withdraw.php">
+                                        <input type="hidden" name="app_id" value="<?php echo (int)$app['app_id']; ?>">
+                                        <input type="hidden" name="redirect" value="/seeker/applications">
+                                    </form>
                                     <button
-                                        onclick="withdrawApplication(<?php echo $app['app_id']; ?>)"
+                                        type="button"
+                                        onclick="confirmWithdraw(<?php echo (int)$app['app_id']; ?>)"
                                         class="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg
-                                               hover:bg-red-100 transition-colors whitespace-nowrap">
+               hover:bg-red-100 transition-colors whitespace-nowrap">
                                         Withdraw
                                     </button>
                                 <?php endif; ?>
@@ -398,7 +403,7 @@ include_once __DIR__ . '/../partials/header.php';
 <?php include_once __DIR__ . '/../partials/footer.php'; ?>
 
 <script>
-    function withdrawApplication(appId) {
+    function confirmWithdraw(appId) {
         Swal.fire({
             icon: 'warning',
             title: 'Withdraw Application?',
@@ -416,62 +421,9 @@ include_once __DIR__ . '/../partials/header.php';
                 cancelButton: 'px-6 py-2 text-sm'
             }
         }).then((result) => {
-            if (!result.isConfirmed) return;
-
-            fetch('<?php echo BASE_URL; ?>/php/functions/withdraw_application.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: 'app_id=' + appId
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Withdrawn!',
-                            text: 'Your application has been withdrawn.',
-                            confirmButtonColor: '#8b91dd',
-                            confirmButtonText: 'OK',
-                            background: '#fff',
-                            customClass: {
-                                popup: 'rounded-2xl',
-                                title: 'text-lg font-semibold',
-                                confirmButton: 'px-6 py-2 text-sm'
-                            }
-                        }).then(() => location.reload());
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.message || 'Failed to withdraw application.',
-                            confirmButtonColor: '#8b91dd',
-                            confirmButtonText: 'OK',
-                            background: '#fff',
-                            customClass: {
-                                popup: 'rounded-2xl',
-                                title: 'text-lg font-semibold',
-                                confirmButton: 'px-6 py-2 text-sm'
-                            }
-                        });
-                    }
-                })
-                .catch(() => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'An unexpected error occurred.',
-                        confirmButtonColor: '#8b91dd',
-                        confirmButtonText: 'OK',
-                        background: '#fff',
-                        customClass: {
-                            popup: 'rounded-2xl',
-                            title: 'text-lg font-semibold',
-                            confirmButton: 'px-6 py-2 text-sm'
-                        }
-                    });
-                });
+            if (result.isConfirmed) {
+                document.getElementById('withdraw-form-' + appId).submit();
+            }
         });
     }
 

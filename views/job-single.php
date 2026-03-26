@@ -1,6 +1,4 @@
 <?php
-// ── Live Data ─────────────────────────────────────────────────────────────────
-// Must run BEFORE header (which starts the session and loads connection)
 require_once 'php/config/connection.php';
 
 $id = $_ROUTE['id'] ?? '';
@@ -11,10 +9,10 @@ if (!ctype_digit($id)) {
 $job_id = (int)$id;
 
 // Get current user info for edit button visibility
-$current_user_id = $_SESSION['user_id'] ?? null;
-$current_user_role = $_SESSION['role'] ?? null;
-$is_employer = $current_user_role === 'employer';
-$is_owner = false;
+$current_user_id   = $_SESSION['user_id'] ?? null;
+$current_user_role = $_SESSION['role']    ?? null;
+$is_employer       = $current_user_role === 'employer';
+$is_owner          = false;
 
 if ($job_id <= 0) {
     http_response_code(404);
@@ -24,7 +22,6 @@ if ($job_id <= 0) {
 
 try {
     $db = getDB();
-
 
     $stmt = $db->prepare("
         SELECT
@@ -98,6 +95,14 @@ try {
         $is_saved = (bool)$checkSaved->fetch();
     }
 
+    // Check if seeker has already applied to this job
+    $existing_application = null;
+    if ($current_user_id && $current_user_role === 'seeker') {
+        $checkApp = $db->prepare("SELECT app_id, status, applied_at FROM applications WHERE seeker_id = ? AND job_id = ?");
+        $checkApp->execute([$current_user_id, $job_id]);
+        $existing_application = $checkApp->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
     // ── Map DB row to template-friendly shape ─────────────────────────────────
     $palettes = [
         ['bg' => '#e8f4fd', 'color' => '#1a6fb5'],
@@ -118,11 +123,11 @@ try {
         'location'      => $row['location'],
         'posted'        => $row['posted'],
         'deadline'      => $row['deadline'] ?? 'Open until filled',
-        'career_level'  => $row['experience']  ?? 'Not specified',
-        'industry'      => $row['industry']       ?? ($row['category_name'] ?? 'Not specified'),
-        'experience'    => $row['experience_range']     ?? 'Not specified',
-        'qualification' => $row['qualification']  ?? 'Not specified',
-        'description'   => $row['description']    ?? '',
+        'career_level'  => $row['experience']      ?? 'Not specified',
+        'industry'      => $row['industry']         ?? ($row['category_name'] ?? 'Not specified'),
+        'experience'    => $row['experience_range'] ?? 'Not specified',
+        'qualification' => $row['qualification']    ?? 'Not specified',
+        'description'   => $row['description']      ?? '',
         'salary'        => ($row['salary_min'] && $row['salary_max'])
             ? 'KES ' . number_format($row['salary_min']) . ' – ' . number_format($row['salary_max'])
             : null,
@@ -138,9 +143,9 @@ try {
 
     $overview_items = [
         ['icon' => 'bar-chart-2',    'label' => 'Career Level',  'value' => $job['career_level']],
-        ['icon' => 'building-2',     'label' => 'Industry',       'value' => $job['industry']],
-        ['icon' => 'sliders',        'label' => 'Experience',     'value' => $job['experience']],
-        ['icon' => 'graduation-cap', 'label' => 'Qualification',  'value' => $job['qualification']],
+        ['icon' => 'building-2',     'label' => 'Industry',      'value' => $job['industry']],
+        ['icon' => 'sliders',        'label' => 'Experience',    'value' => $job['experience']],
+        ['icon' => 'graduation-cap', 'label' => 'Qualification', 'value' => $job['qualification']],
     ];
     if ($job['salary']) {
         $overview_items[] = ['icon' => 'banknote', 'label' => 'Salary', 'value' => $job['salary']];
@@ -225,7 +230,6 @@ function renderMarkdown(string $text): string
         </div>
     </section>
 
-
     <div class="min-h-screen py-8 px-4">
         <div class="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6 items-start">
 
@@ -256,7 +260,6 @@ function renderMarkdown(string $text): string
 
                 <!-- Job description -->
                 <div class="bg-white p-8">
-
                     <h2 class="text-xl font-bold text-gray-900 mb-4">Job Description</h2>
 
                     <?php if ($job['description']): ?>
@@ -280,30 +283,111 @@ function renderMarkdown(string $text): string
             <!-- ── Right: Sidebar ───────────────────────────────────────── -->
             <div class="w-full lg:w-72 shrink-0 lg:sticky lg:top-24 flex flex-col gap-5">
 
-                <!-- Edit button (if owner) / Apply button -->
+                <!-- ── CTA Block ──────────────────────────────────────────── -->
+
                 <?php if ($is_owner): ?>
+                    <!-- Employer who owns this job → Edit -->
                     <a href="/employer/jobs/<?php echo (int)$job['job_id']; ?>/edit"
                         class="w-full block text-center bg-[#2b9a66] hover:bg-[#1e7047] text-white font-semibold text-base
-                    py-4 rounded-lg shadow transition-colors duration-200 flex items-center justify-center gap-2">
+                               py-4 rounded-lg shadow transition-colors duration-200 flex items-center justify-center gap-2">
                         <i data-lucide="edit" class="w-5 h-5"></i>
                         Edit Job
                     </a>
-                <?php else: ?>
+
+                <?php elseif ($current_user_role === 'employer'): ?>
+                    <!-- Another employer → blocked -->
+                    <div class="w-full bg-gray-100 border border-gray-200 text-gray-500 text-sm font-medium
+                                py-4 px-4 rounded-lg flex items-center justify-center gap-2">
+                        <i data-lucide="ban" class="w-4 h-4"></i>
+                        Employers cannot apply for jobs
+                    </div>
+
+                <?php elseif ($current_user_role === 'seeker' && $existing_application): ?>
+                    <!-- Seeker already applied → status banner + optional withdraw -->
+                    <?php
+                        $appStatus   = $existing_application['status'];
+                        $appliedDate = date('M j, Y', strtotime($existing_application['applied_at']));
+                        $statusConfig = [
+                            'Pending'     => ['bg' => 'bg-amber-50',  'border' => 'border-amber-300',  'text' => 'text-amber-700',  'icon' => 'clock',        'label' => 'Application Pending'],
+                            'Reviewed'    => ['bg' => 'bg-blue-50',   'border' => 'border-blue-300',   'text' => 'text-blue-700',   'icon' => 'eye',          'label' => 'Under Review'],
+                            'Shortlisted' => ['bg' => 'bg-indigo-50', 'border' => 'border-indigo-300', 'text' => 'text-indigo-700', 'icon' => 'star',         'label' => 'Shortlisted!'],
+                            'Hired'       => ['bg' => 'bg-green-50',  'border' => 'border-green-300',  'text' => 'text-green-700',  'icon' => 'check-circle', 'label' => "You're Hired!"],
+                            'Rejected'    => ['bg' => 'bg-red-50',    'border' => 'border-red-300',    'text' => 'text-red-700',    'icon' => 'x-circle',     'label' => 'Not Selected'],
+                        ];
+                        $sc = $statusConfig[$appStatus] ?? $statusConfig['Pending'];
+                    ?>
+                    <div class="w-full <?php echo $sc['bg']; ?> border <?php echo $sc['border']; ?> rounded-lg px-4 py-4">
+                        <div class="flex items-center gap-2 <?php echo $sc['text']; ?> font-semibold text-sm mb-1">
+                            <i data-lucide="<?php echo $sc['icon']; ?>" class="w-4 h-4 shrink-0"></i>
+                            <?php echo $sc['label']; ?>
+                        </div>
+                        <p class="text-xs text-gray-500">Applied on <?php echo $appliedDate; ?></p>
+
+                        <?php if ($appStatus === 'Pending'): ?>
+                            <!-- Hidden form — submitted programmatically after SweetAlert confirm -->
+                            <form id="withdraw-form" method="POST" action="/php/functions/withdraw.php">
+                                <input type="hidden" name="app_id"   value="<?php echo (int)$existing_application['app_id']; ?>">
+                                <input type="hidden" name="redirect" value="/jobs/<?php echo (int)$job['job_id']; ?>">
+                            </form>
+                            <button
+                                type="button"
+                                onclick="confirmWithdraw()"
+                                class="mt-3 w-full border border-red-300 text-red-600 hover:bg-red-50 text-xs font-semibold
+                                       py-2 px-3 rounded-md transition-colors duration-200 flex items-center justify-center gap-1.5">
+                                <i data-lucide="undo-2" class="w-3.5 h-3.5"></i>
+                                Withdraw Application
+                            </button>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Save job still available even after applying -->
+                    <form method="POST" action="/save-job">
+                        <input type="hidden" name="job_id"   value="<?php echo (int)$job['job_id']; ?>">
+                        <input type="hidden" name="redirect" value="/jobs/<?php echo (int)$job['job_id']; ?>">
+                        <button type="submit"
+                            class="w-full px-4 py-3 border-2 font-semibold text-sm rounded-lg transition-colors duration-200
+                                   flex items-center justify-center gap-2
+                                   <?php echo $is_saved ? 'border-[#fb236a] text-[#fb236a] bg-pink-50' : 'border-gray-300 text-gray-700 hover:border-[#fb236a] hover:text-[#fb236a]'; ?>">
+                            <i data-lucide="bookmark" class="w-4 h-4"></i>
+                            <?php echo $is_saved ? 'Saved' : 'Save Job'; ?>
+                        </button>
+                    </form>
+
+                <?php elseif ($current_user_role === 'seeker'): ?>
+                    <!-- Seeker not yet applied -->
                     <div class="flex flex-col gap-3">
                         <a href="/jobs/<?php echo (int)$job['job_id']; ?>/apply"
                             class="w-full block text-center bg-[#fb236a] hover:bg-[#e01060] text-white font-semibold text-base
-                        py-4 rounded-lg shadow transition-colors duration-200">
+                                   py-4 rounded-lg shadow transition-colors duration-200">
                             Apply for this job
                         </a>
                         <form method="POST" action="/save-job">
-                            <input type="hidden" name="job_id" value="<?php echo (int)$job['job_id']; ?>">
+                            <input type="hidden" name="job_id"   value="<?php echo (int)$job['job_id']; ?>">
                             <input type="hidden" name="redirect" value="/jobs/<?php echo (int)$job['job_id']; ?>">
                             <button type="submit"
-                                class="w-full px-4 py-3 border-2 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 <?php echo $is_saved ? 'border-[#fb236a] text-[#fb236a] bg-pink-50' : 'border-gray-300 text-gray-700 hover:border-[#fb236a] hover:text-[#fb236a]'; ?>">
+                                class="w-full px-4 py-3 border-2 font-semibold text-sm rounded-lg transition-colors duration-200
+                                       flex items-center justify-center gap-2
+                                       <?php echo $is_saved ? 'border-[#fb236a] text-[#fb236a] bg-pink-50' : 'border-gray-300 text-gray-700 hover:border-[#fb236a] hover:text-[#fb236a]'; ?>">
                                 <i data-lucide="bookmark" class="w-4 h-4"></i>
                                 <?php echo $is_saved ? 'Saved' : 'Save Job'; ?>
                             </button>
                         </form>
+                    </div>
+
+                <?php else: ?>
+                    <!-- Guest / not logged in -->
+                    <div class="flex flex-col gap-3">
+                        <a href="/login?redirect=<?php echo urlencode('/jobs/' . (int)$job['job_id']); ?>"
+                            class="w-full block text-center bg-[#fb236a] hover:bg-[#e01060] text-white font-semibold text-base
+                                   py-4 rounded-lg shadow transition-colors duration-200">
+                            Login to Apply
+                        </a>
+                        <a href="/register"
+                            class="w-full block text-center border-2 border-gray-300 text-gray-700
+                                   hover:border-[#fb236a] hover:text-[#fb236a] font-semibold text-sm
+                                   py-3 rounded-lg transition-colors duration-200">
+                            Create an Account
+                        </a>
                     </div>
                 <?php endif; ?>
 
@@ -327,7 +411,6 @@ function renderMarkdown(string $text): string
                 <!-- Job Location -->
                 <div class="bg-white px-6 py-5 rounded-lg border border-gray-100 shadow-sm">
                     <h3 class="text-base font-bold text-gray-900 mb-4">Job Location</h3>
-                    <!-- Map placeholder — swap for a Google Maps iframe with the location -->
                     <div class="w-full h-40 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
                         <div class="flex flex-col items-center gap-2 text-xs">
                             <i data-lucide="map" class="w-8 h-8 text-gray-300"></i>
@@ -399,5 +482,33 @@ function renderMarkdown(string $text): string
         font-style: italic;
     }
 </style>
+
+<?php if ($current_user_role === 'seeker' && $existing_application && $existing_application['status'] === 'Pending'): ?>
+<script>
+    function confirmWithdraw() {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Withdraw Application?',
+            text: 'This will permanently remove your application for this job.',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#8b91dd',
+            confirmButtonText: 'Yes, Withdraw',
+            cancelButtonText: 'Cancel',
+            background: '#fff',
+            customClass: {
+                popup: 'rounded-2xl',
+                title: 'text-lg font-semibold',
+                confirmButton: 'px-6 py-2 text-sm',
+                cancelButton: 'px-6 py-2 text-sm'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('withdraw-form').submit();
+            }
+        });
+    }
+</script>
+<?php endif; ?>
 
 <?php include_once 'partials/footer.php'; ?>

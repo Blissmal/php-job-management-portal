@@ -337,58 +337,6 @@ try {
     coverLetterInput?.addEventListener('input', function() {
         charCount.textContent = this.value.length;
     });
-
-    // SweetAlert notifications for success/error messages
-    document.addEventListener('DOMContentLoaded', () => {
-        const showAlert = () => {
-            const success = '<?php echo !empty($_SESSION['success']) ? 'true' : 'false'; ?>';
-            const error = '<?php echo !empty($_SESSION['error']) ? 'true' : 'false'; ?>';
-            const successMessage = '<?php echo htmlspecialchars($_SESSION['success'] ?? ''); ?>';
-            const errorMessage = '<?php echo htmlspecialchars($_SESSION['error'] ?? ''); ?>';
-
-            if (success === 'true' && typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Application Submitted!',
-                    text: successMessage,
-                    confirmButtonColor: '#2b9a66',
-                    confirmButtonText: 'View My Applications',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '/seeker/applications';
-                    }
-                });
-                return;
-            }
-
-            if (error === 'true' && typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Application Failed',
-                    text: errorMessage,
-                    confirmButtonColor: '#fb236a',
-                    confirmButtonText: 'Try Again'
-                });
-                return;
-            }
-        };
-
-        // Wait for Swal to load if not immediately available
-        if (typeof Swal !== 'undefined') {
-            showAlert();
-        } else {
-            let attempts = 0;
-            const waitForSwal = setInterval(() => {
-                if (typeof Swal !== 'undefined' || attempts > 50) {
-                    clearInterval(waitForSwal);
-                    showAlert();
-                }
-                attempts++;
-            }, 100);
-        }
-    });
 </script>
 
 <?php include_once 'partials/footer.php'; ?>
