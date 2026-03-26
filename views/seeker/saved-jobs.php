@@ -125,11 +125,11 @@ include_once __DIR__ . '/../partials/header.php';
                                     class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors text-center whitespace-nowrap">
                                     View Details
                                 </a>
-                                <button
+                                <!-- <button
                                     onclick="removeSavedJob(<?php echo $job['save_id']; ?>)"
                                     class="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors whitespace-nowrap">
                                     Remove
-                                </button>
+                                </button> -->
                             </div>
                         </div>
                     </div>

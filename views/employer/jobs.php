@@ -95,6 +95,13 @@ include_once __DIR__ . '/../partials/header.php';
                                             <a href="/jobs/<?php echo $job['job_id']; ?>" class="p-1.5 rounded border border-slate-200 text-slate-600 hover:bg-slate-50" title="View Listing">
                                                 <i data-lucide="eye" class="w-4 h-4"></i>
                                             </a>
+                                            <form action="/post-a-job" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this job? This action cannot be undone.');">
+                                                <input type="hidden" name="job_id" value="<?php echo $job['job_id']; ?>">
+                                                <input type="hidden" name="action" value="delete">
+                                                <button type="submit" class="p-1.5 rounded border border-red-200 text-red-500 hover:bg-red-50 transition-colors" title="Delete Listing">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>

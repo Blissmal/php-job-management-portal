@@ -138,6 +138,19 @@ if ($action === 'create' || $action === 'edit') {
     }
     $db->prepare("UPDATE jobs SET status='open' WHERE job_id=?")->execute([$job_id]);
     $_SESSION['success'] = 'Job reopened.';
+} elseif ($action === 'delete') {
+    $job_id = (int)($_POST['job_id'] ?? 0);
+    $chk = $db->prepare("SELECT employer_id FROM jobs WHERE job_id = ?");
+    $chk->execute([$job_id]);
+    $job = $chk->fetch();
+    if (!$job || (int)$job['employer_id'] !== $employer_id) {
+        http_response_code(403);
+        exit;
+    }
+    
+    // Delete the job from the database
+    $db->prepare("DELETE FROM jobs WHERE job_id=?")->execute([$job_id]);
+    $_SESSION['success'] = 'Job successfully deleted.';
 }
 
 header('Location: ' . BASE_URL . '/dashboard');
