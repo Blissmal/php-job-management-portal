@@ -39,7 +39,7 @@ include_once __DIR__ . '/../partials/header.php';
                             <th class="px-6 py-3 font-semibold text-slate-700">Employer</th>
                             <th class="px-6 py-3 font-semibold text-slate-700">Category</th>
                             <th class="px-6 py-3 font-semibold text-slate-700">Status</th>
-                            <th class="px-6 py-3 font-semibold text-slate-700 text-right">Actions</th>
+                            <!-- <th class="px-6 py-3 font-semibold text-slate-700 text-right">Actions</th> -->
                         </tr>
                     </thead>
                     <tbody>
@@ -58,9 +58,9 @@ include_once __DIR__ . '/../partials/header.php';
                                         <?php echo $j['status']; ?>
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right">
+                                <!-- <td class="px-6 py-4 text-right">
                                     <button class="text-red-600 hover:underline">Remove</button>
-                                </td>
+                                </td> -->
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

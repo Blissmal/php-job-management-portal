@@ -51,7 +51,8 @@ if ($userRole === 'seeker') {
     ['icon' => 'shield',           'label' => 'Admins',     'href' => '/admin/admins', 'badge' => null],
     ['icon' => 'building',         'label' => 'Employers',  'href' => '/admin/employers', 'badge' => null],
     ['icon' => 'briefcase',        'label' => 'All Jobs',   'href' => '/admin/jobs', 'badge' => null],
-    ['icon' => 'file-text',        'label' => 'Apps',       'href' => '/admin/applications', 'badge' => null]
+    ['icon' => 'file-text',        'label' => 'Apps',       'href' => '/admin/applications', 'badge' => null],
+    ['icon'=> 'bookmark',        'label'=> 'Categories',  'href' => '/admin/categories', 'badge' => null],
   ];
 }
 
