@@ -155,7 +155,7 @@ include_once 'partials/header.php';
                     <div class="px-6 pb-6">
                         <!-- Profile Section -->
                         <div class="flex items-start gap-4 -mt-12 mb-6 relative">
-                            <div class="w-24 h-24 rounded-xl bg-gradient-to-br from-purple-400 to-blue-600 border-4 border-white flex items-center justify-center text-4xl font-bold text-white">
+                            <div style="background: linear-gradient(135deg, #8b91dd 0%, #10195d 70%, #10195d 100%);" class="w-24 h-24 rounded-xl border-4 border-white flex items-center justify-center text-4xl font-bold text-white">
                                 <?= strtoupper(substr($app['full_name'], 0, 1)) ?>
                             </div>
                             <div class="flex-1 pt-4">
