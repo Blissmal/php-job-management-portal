@@ -110,6 +110,7 @@ $routes = [
     ['POST', '/save-job',             'php/functions/save_job.php',  'requireSeeker'],
     ['POST', '/admin/seekers', 'php/functions/users.php', 'requireAdmin'],
     ['POST', '/admin/employers', 'php/functions/employers.php', 'requireAdmin'],
+    ['POST', '/admin/add-admin', 'php/functions/admin.php', 'requireAdmin'],
 ];
 
 // ─── Dispatcher ────────────────────────────────────────────────────────────────
