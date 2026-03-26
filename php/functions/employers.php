@@ -16,29 +16,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete' && $target_user_id > 0) {
         try {
-            // Delete user. Ensure your DB uses ON DELETE CASCADE for related profile/application tables!
-            $delStmt = $db->prepare("DELETE FROM users WHERE user_id = ? AND role = 'seeker'");
+            $delStmt = $db->prepare("DELETE FROM users WHERE user_id = ? AND role = 'employer'");
             $delStmt->execute([$target_user_id]);
-            $_SESSION['success'] = "User successfully deleted.";
+            $_SESSION['success'] = "Employer account and associated profile deleted.";
         } catch (Exception $e) {
-            error_log("Error deleting user: " . $e->getMessage());
-            $_SESSION['error'] = "Failed to delete user. They may have dependent records.";
+            error_log("Error deleting employer: " . $e->getMessage());
+            $_SESSION['error'] = "Failed to delete employer. Please remove associated job postings first if cascade is not set.";
         }
-        header('Location: /admin/users');
+        header('Location: /admin/employers');
         exit;
     } 
     elseif ($action === 'update' && $target_user_id > 0) {
         $status = $_POST['status'] ?? 'active';
         try {
-            // Update the user's status
-            $updStmt = $db->prepare("UPDATE users SET status = ? WHERE user_id = ? AND role = 'seeker'");
+            $updStmt = $db->prepare("UPDATE users SET status = ? WHERE user_id = ? AND role = 'employer'");
             $updStmt->execute([$status, $target_user_id]);
-            $_SESSION['success'] = "User status updated successfully.";
+            $_SESSION['success'] = "Employer status updated successfully.";
         } catch (Exception $e) {
-            error_log("Error updating user: " . $e->getMessage());
-            $_SESSION['error'] = "Failed to update user status.";
+            error_log("Error updating employer: " . $e->getMessage());
+            $_SESSION['error'] = "Failed to update employer status.";
         }
-        header('Location: /admin/users');
+        header('Location: /admin/employers');
         exit;
     }
 }
@@ -48,4 +46,5 @@ $success = $_SESSION['success'] ?? null;
 $error = $_SESSION['error'] ?? null;
 unset($_SESSION['success'], $_SESSION['error']);
 
+include_once __DIR__ . '/../partials/header.php';
 ?>

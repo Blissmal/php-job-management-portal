@@ -87,11 +87,11 @@ include_once __DIR__ . '/../partials/header.php';
                                     <td class="px-6 py-4 text-slate-500"><?php echo date('M d, Y', strtotime($s['created_at'])); ?></td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-3">
-                                            <button type="button" 
+                                            <!-- <button type="button" 
                                                 onclick="openEditModal(<?php echo (int)$s['user_id']; ?>, '<?php echo htmlspecialchars(addslashes($s['email'])); ?>', '<?php echo htmlspecialchars(addslashes($s['status'])); ?>')" 
                                                 class="text-indigo-600 hover:text-indigo-800 transition-colors" title="Edit Status">
                                                 <i data-lucide="edit-2" class="w-4 h-4"></i>
-                                            </button>
+                                            </button> -->
 
                                             <form method="POST" action="/admin/seekers" class="inline" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
                                                 <input type="hidden" name="action" value="delete">
