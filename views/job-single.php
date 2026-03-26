@@ -295,13 +295,15 @@ function renderMarkdown(string $text): string
                         py-4 rounded-lg shadow transition-colors duration-200">
                             Apply for this job
                         </a>
-                        <button type="button" id="saveJobBtn"
-                            class="w-full px-4 py-3 border-2 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 <?php echo $is_saved ? 'border-[#fb236a] text-[#fb236a] bg-pink-50' : 'border-gray-300 text-gray-700 hover:border-[#fb236a] hover:text-[#fb236a]'; ?>"
-                            data-job-id="<?php echo (int)$job['job_id']; ?>"
-                            data-is-saved="<?php echo $is_saved ? 'true' : 'false'; ?>">
-                            <i data-lucide="bookmark" class="w-4 h-4"></i>
-                            <span id="saveJobBtnText"><?php echo $is_saved ? 'Saved' : 'Save Job'; ?></span>
-                        </button>
+                        <form method="POST" action="/save-job">
+                            <input type="hidden" name="job_id" value="<?php echo (int)$job['job_id']; ?>">
+                            <input type="hidden" name="redirect" value="/jobs/<?php echo (int)$job['job_id']; ?>">
+                            <button type="submit"
+                                class="w-full px-4 py-3 border-2 font-semibold text-sm rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 <?php echo $is_saved ? 'border-[#fb236a] text-[#fb236a] bg-pink-50' : 'border-gray-300 text-gray-700 hover:border-[#fb236a] hover:text-[#fb236a]'; ?>">
+                                <i data-lucide="bookmark" class="w-4 h-4"></i>
+                                <?php echo $is_saved ? 'Saved' : 'Save Job'; ?>
+                            </button>
+                        </form>
                     </div>
                 <?php endif; ?>
 

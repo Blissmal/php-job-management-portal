@@ -52,7 +52,7 @@ $whereSQL = implode(' AND ', $whereClauses);
 $countStmt = $db->prepare("
     SELECT COUNT(*) FROM applications ja
     JOIN jobs j          ON ja.job_id     = j.job_id
-    JOIN employer_profiles ep ON j.employer_id = ep.profile_id
+    LEFT JOIN employer_profiles ep ON j.employer_id = ep.user_id
     WHERE $whereSQL
 ");
 $countStmt->execute($params);
@@ -65,11 +65,11 @@ $params[] = $offset;
 
 $stmt = $db->prepare("
     SELECT ja.app_id, j.job_id, j.title, j.location, j.salary_min, j.salary_max,
-           ep.company_name, jc.category_name, jc.icon_path,
+           COALESCE(ep.company_name, 'Unknown Company') AS company_name, jc.category_name, jc.icon_path,
            ja.status, ja.applied_at, ja.cover_letter
     FROM applications ja
     JOIN jobs j                 ON ja.job_id     = j.job_id
-    JOIN employer_profiles ep   ON j.employer_id = ep.profile_id
+    LEFT JOIN employer_profiles ep   ON j.employer_id = ep.user_id
     LEFT JOIN job_categories jc ON j.category_id = jc.category_id
     WHERE $whereSQL
     ORDER BY ja.applied_at DESC

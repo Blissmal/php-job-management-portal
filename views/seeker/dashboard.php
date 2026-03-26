@@ -44,10 +44,10 @@ $totalApplications = $pendingCount + $acceptedCount + $rejectedCount;
 
 // Fetch recent applications
 $stmt = $db->prepare("
-    SELECT ja.app_id, j.title, c.company_name, ja.status, ja.applied_at
+    SELECT ja.app_id, j.job_id, j.title, COALESCE(c.company_name, 'Unknown Company') AS company_name, ja.status, ja.applied_at
     FROM applications ja
     JOIN jobs j ON ja.job_id = j.job_id
-    JOIN employer_profiles c ON j.employer_id = c.profile_id
+    LEFT JOIN employer_profiles c ON j.employer_id = c.user_id
     WHERE ja.seeker_id = ?
     ORDER BY ja.applied_at DESC
     LIMIT 5

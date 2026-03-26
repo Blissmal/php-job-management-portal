@@ -14,10 +14,10 @@ $db = getDB();
 // Fetch saved jobs
 $stmt = $db->prepare("
     SELECT sj.save_id, j.job_id, j.title, j.description, j.salary_min, j.salary_max,
-           ep.company_name, jc.category_name, jc.icon_path, j.location, j.created_at, sj.saved_at
+           COALESCE(ep.company_name, 'Unknown Company') AS company_name, jc.category_name, jc.icon_path, j.location, j.created_at, sj.saved_at
     FROM saved_jobs sj
     JOIN jobs j ON sj.job_id = j.job_id
-    JOIN employer_profiles ep ON j.employer_id = ep.profile_id
+    LEFT JOIN employer_profiles ep ON j.employer_id = ep.user_id
     LEFT JOIN job_categories jc ON j.category_id = jc.category_id
     WHERE sj.seeker_id = ?
     ORDER BY sj.saved_at DESC
