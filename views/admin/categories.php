@@ -166,7 +166,7 @@ include_once 'views/partials/header.php';
             </div>
 
             <form method="POST" action="/admin/categories" class="px-6 py-6 space-y-4">
-                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="action" value="edit">
                 <input type="hidden" name="category_id" id="editCategoryId">
 
                 <div>
