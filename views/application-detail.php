@@ -342,7 +342,7 @@ include_once 'partials/header.php';
                                 </p>
                             </div>
                         <?php endif; ?>
-                        <a href="/job/<?= $app['job_id'] ?>" class="block mt-4 px-4 py-2 rounded-lg text-center text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors border border-indigo-200">
+                        <a href="/jobs/<?= $app['job_id'] ?>" class="block mt-4 px-4 py-2 rounded-lg text-center text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors border border-indigo-200">
                             View Job Posting
                         </a>
                     </div>
