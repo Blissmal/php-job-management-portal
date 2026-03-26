@@ -82,7 +82,6 @@ if (!empty($_FILES['resume']['name'])) {
     }
 }
 
-$db = getDB();
 try {
     $db->prepare(
         "INSERT INTO applications (job_id, seeker_id, resume_snapshot_path, cover_letter)

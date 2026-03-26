@@ -153,5 +153,5 @@ if ($action === 'create' || $action === 'edit') {
     $_SESSION['success'] = 'Job successfully deleted.';
 }
 
-header('Location: ' . BASE_URL . '/dashboard');
+header('Location: ' . BASE_URL . '/employer/jobs');
 exit;

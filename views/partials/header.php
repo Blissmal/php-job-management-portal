@@ -155,6 +155,27 @@ if ($navUserId) {
       box-shadow: 0 0 0 2px rgba(232,20,77,0.15);
     }
   </style>
+  <?php
+  $flashSuccess = $_SESSION['success'] ?? null;
+  $flashError   = $_SESSION['error'] ?? null;
+  unset($_SESSION['success'], $_SESSION['error']);
+  ?>
+  <?php if ($flashSuccess || $flashError): ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+          icon: '<?= $flashSuccess ? 'success' : 'error' ?>',
+          title: '<?= $flashSuccess ? 'Success' : 'Error' ?>',
+          text: <?= json_encode($flashSuccess ?? $flashError) ?>,
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+        });
+      });
+    </script>
+  <?php endif; ?>
 </head>
 
 <body class="font-varela-round h-full min-h-screen flex flex-col">

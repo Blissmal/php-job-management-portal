@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_status'], $_POST[
         ");
         
         if ($stmt->execute([$newStatus, $app_id, $uid]) && $stmt->rowCount() > 0) {
-            $_SESSION['statusMessage'] = "Status updated to: <strong>" . htmlspecialchars($newStatus) . "</strong>";
+            $_SESSION['success'] = "Status updated to: <strong>" . htmlspecialchars($newStatus) . "</strong>";
         } else {
             $_SESSION['error'] = "Failed to update status or permission denied.";
         }

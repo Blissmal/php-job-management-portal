@@ -136,6 +136,6 @@ if ($role === 'seeker') {
 $_SESSION['success'] = 'Profile completed! Redirecting to dashboard...';
 
 // Redirect based on role
-$redirect = ($role === 'seeker') ? '/seeker/profile' : '/employer/profile';
+$redirect = ($role === 'seeker') ? '/seeker/dashboard' : '/employer/dashboard';
 header('Location: ' . BASE_URL . $redirect);
 exit;

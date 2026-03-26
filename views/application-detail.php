@@ -87,9 +87,9 @@ $totalApplications = $stmt->fetchColumn();
 
 // Status change handler
 $statusMessage = null;
-if (isset($_SESSION['statusMessage'])) {
-    $statusMessage = $_SESSION['statusMessage'];
-    unset($_SESSION['statusMessage']);
+if (isset($_SESSION['success'])) {
+    $statusMessage = $_SESSION['success'];
+    unset($_SESSION['success']);
 }
 $errorMessage = null;
 if (isset($_SESSION['error'])) {

@@ -12,7 +12,7 @@ $email = trim($_POST['email'] ?? '');
 $pass  = $_POST['password'] ?? '';
 
 if (empty($email) || empty($pass)) {
-    $_SESSION['authError'] = 'Email and password are required.';
+    $_SESSION['error'] = 'Email and password are required.';
     header('Location: ' . BASE_URL . '/login');
     exit;
 }
@@ -23,13 +23,13 @@ $stmt->execute([$email]);
 $user = $stmt->fetch();
 
 if (!$user || !password_verify($pass, $user['password_hash'])) {
-    $_SESSION['authError'] = 'Invalid email or password.';
+    $_SESSION['error'] = 'Invalid email or password.';
     header('Location: ' . BASE_URL . '/login');
     exit;
 }
 
 if ($user['status'] !== 'active') {
-    $_SESSION['authError'] = 'Your account has been deactivated. Please contact the administrator.';
+    $_SESSION['error'] = 'Your account has been deactivated. Please contact the administrator.';
     header('Location: ' . BASE_URL . '/login');
     exit;
 }
@@ -41,6 +41,7 @@ $_SESSION['user_id'] = $user['user_id'];
 $_SESSION['role']    = $user['role'];
 $_SESSION['status']  = $user['status'];
 $_SESSION['email']   = $email;
+$_SESSION['success'] = "logged in successfully";
 
 // Check if profile is complete (skip for admin)
 if ($_SESSION['role'] !== 'admin' && !isProfileComplete()) {
