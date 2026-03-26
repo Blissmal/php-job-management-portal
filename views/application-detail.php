@@ -138,7 +138,7 @@ include_once 'partials/header.php';
         <!-- Back Button -->
         <a href="/employer/applications" class="text-sm text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-1.5 mb-6">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
             Back to Applications
         </a>
@@ -213,10 +213,10 @@ include_once 'partials/header.php';
                         <?php if ($app['resume_path']): ?>
                             <div class="pt-6 border-t border-slate-200">
                                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Resume</p>
-                                <a href="/php/functions/download_resume.php?id=<?= $app['seeker_id'] ?>" 
-                                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-sm font-medium">
+                                <a href="/php/functions/download_resume.php?app_id=<?= $app['app_id'] ?>"
+                                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-sm font-medium">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l-7-7m0 0l7-7m-7 7h18"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
                                     Download Resume
                                 </a>
@@ -250,14 +250,14 @@ include_once 'partials/header.php';
                                         <p class="font-medium text-slate-800 group-hover:text-indigo-600 transition-colors"><?= htmlspecialchars($other['title']) ?></p>
                                         <p class="text-xs text-slate-500 mt-1"><?= date('M d, Y', strtotime($other['applied_at'])) ?></p>
                                     </div>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= match($other['status']) {
-                                        'Pending' => 'bg-yellow-50 text-yellow-700',
-                                        'Reviewed' => 'bg-blue-50 text-blue-700',
-                                        'Shortlisted' => 'bg-purple-50 text-purple-700',
-                                        'Hired' => 'bg-green-50 text-green-700',
-                                        'Rejected' => 'bg-red-50 text-red-700',
-                                        default => 'bg-slate-50 text-slate-700'
-                                    } ?>">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <?= match ($other['status']) {
+                                                                                                                                'Pending' => 'bg-yellow-50 text-yellow-700',
+                                                                                                                                'Reviewed' => 'bg-blue-50 text-blue-700',
+                                                                                                                                'Shortlisted' => 'bg-purple-50 text-purple-700',
+                                                                                                                                'Hired' => 'bg-green-50 text-green-700',
+                                                                                                                                'Rejected' => 'bg-red-50 text-red-700',
+                                                                                                                                default => 'bg-slate-50 text-slate-700'
+                                                                                                                            } ?>">
                                         <?= $other['status'] ?>
                                     </span>
                                 </a>
@@ -280,14 +280,14 @@ include_once 'partials/header.php';
                         <!-- Current Status Badge -->
                         <div>
                             <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Current Status</p>
-                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-semibold <?= match($app['status']) {
-                                'Pending' => 'bg-yellow-50 text-yellow-700',
-                                'Reviewed' => 'bg-blue-50 text-blue-700',
-                                'Shortlisted' => 'bg-purple-50 text-purple-700',
-                                'Hired' => 'bg-green-50 text-green-700',
-                                'Rejected' => 'bg-red-50 text-red-700',
-                                default => 'bg-slate-50 text-slate-700'
-                            } ?>">
+                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-semibold <?= match ($app['status']) {
+                                                                                                                    'Pending' => 'bg-yellow-50 text-yellow-700',
+                                                                                                                    'Reviewed' => 'bg-blue-50 text-blue-700',
+                                                                                                                    'Shortlisted' => 'bg-purple-50 text-purple-700',
+                                                                                                                    'Hired' => 'bg-green-50 text-green-700',
+                                                                                                                    'Rejected' => 'bg-red-50 text-red-700',
+                                                                                                                    default => 'bg-slate-50 text-slate-700'
+                                                                                                                } ?>">
                                 <?= $app['status'] ?>
                             </span>
                         </div>
@@ -307,9 +307,9 @@ include_once 'partials/header.php';
                                 </select>
                             </div>
                             <button type="submit" class="w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    style="background-color:#D5225A;"
-                                    onmouseover="this.style.backgroundColor='#b81c4a'"
-                                    onmouseout="this.style.backgroundColor='#D5225A'">
+                                style="background-color:#D5225A;"
+                                onmouseover="this.style.backgroundColor='#b81c4a'"
+                                onmouseout="this.style.backgroundColor='#D5225A'">
                                 Update Status
                             </button>
                         </form>
@@ -365,7 +365,8 @@ include_once 'partials/header.php';
 
                         <!-- Status breakdown -->
                         <?php foreach (['Pending' => 'yellow', 'Reviewed' => 'blue', 'Shortlisted' => 'purple', 'Hired' => 'green', 'Rejected' => 'red'] as $status => $color): ?>
-                            <?php $count = $statusStats[$status] ?? 0; $percentage = $totalApps > 0 ? ($count / $totalApps) * 100 : 0; ?>
+                            <?php $count = $statusStats[$status] ?? 0;
+                            $percentage = $totalApps > 0 ? ($count / $totalApps) * 100 : 0; ?>
                             <div class="pt-2">
                                 <div class="flex items-center justify-between mb-1">
                                     <p class="text-xs font-medium text-slate-600"><?= $status ?></p>
@@ -385,8 +386,8 @@ include_once 'partials/header.php';
                         <h3 class="font-bold text-slate-800">Quick Actions</h3>
                     </div>
                     <div class="p-6 space-y-3">
-                        <button onclick="window.location.href='mailto:<?= htmlspecialchars($app['seeker_email']) ?>';" 
-                                class="w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-indigo-600 border-2 border-indigo-200 hover:bg-indigo-50 transition-colors">
+                        <button onclick="window.location.href='mailto:<?= htmlspecialchars($app['seeker_email']) ?>';"
+                            class="w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-indigo-600 border-2 border-indigo-200 hover:bg-indigo-50 transition-colors">
                             Send Email
                         </button>
                         <a href="/employer/applications" class="block w-full px-4 py-2.5 rounded-lg text-center text-sm font-semibold text-slate-600 border-2 border-slate-200 hover:bg-slate-50 transition-colors">
@@ -404,11 +405,25 @@ include_once 'partials/header.php';
 
 <style>
     /* Gradient color support for progress bars */
-    .bg-yellow-500 { background-color: #eab308; }
-    .bg-blue-500 { background-color: #3b82f6; }
-    .bg-purple-500 { background-color: #a855f7; }
-    .bg-green-500 { background-color: #22c55e; }
-    .bg-red-500 { background-color: #ef4444; }
+    .bg-yellow-500 {
+        background-color: #eab308;
+    }
+
+    .bg-blue-500 {
+        background-color: #3b82f6;
+    }
+
+    .bg-purple-500 {
+        background-color: #a855f7;
+    }
+
+    .bg-green-500 {
+        background-color: #22c55e;
+    }
+
+    .bg-red-500 {
+        background-color: #ef4444;
+    }
 </style>
 
 <?php include_once 'partials/footer.php'; ?>
