@@ -88,6 +88,8 @@ try {
          VALUES (?, ?, ?, ?)"
     )->execute([$job_id, $seeker_id, $resume_path, $cover]);
 
+    $_SESSION["success"] = "Applied sucessfully";
+
     header('Location: ' . BASE_URL . '/seeker/applications?applied=1');
     exit;
 } catch (PDOException $e) {
