@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete' && $target_user_id > 0) {
         try {
-            // Delete user. Ensure your DB uses ON DELETE CASCADE for related profile/application tables!
+            // Delete user. Automatically removes any user related record on other tables (ON DELETE CASCADE)
             $delStmt = $db->prepare("DELETE FROM users WHERE user_id = ? AND role = 'seeker'");
             $delStmt->execute([$target_user_id]);
             $_SESSION['success'] = "User successfully deleted.";

@@ -1,21 +1,24 @@
 <?php
+
 /**
  * php/functions/admin_operations.php
  */
 require_once __DIR__ . '/../config/connection.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-// Make sure the user is actually an admin before processing
+// Make sure the user is an admin before processing
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     header('Location: /login');
     exit;
 }
 
+// If the methos is not post navigate to dashboard
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: /admin/admins');
+    header('Location: /admin/dashboard');
     exit;
 }
 
+// Getting action data from the form
 $action = $_POST['action'] ?? '';
 $db = getDB();
 
@@ -54,7 +57,7 @@ if ($action === 'create_admin') {
         // Insert new admin
         $stmt = $db->prepare("INSERT INTO users (email, password_hash, role, status) VALUES (?, ?, 'admin', 'active')");
         $stmt->execute([$email, $hash]);
-        
+
         $_SESSION['success'] = 'New admin user created successfully.';
     } catch (Exception $e) {
         error_log('Admin creation error: ' . $e->getMessage());
@@ -63,8 +66,7 @@ if ($action === 'create_admin') {
 
     header('Location: ' . $redirect_url);
     exit;
-} 
-elseif ($action === 'revoke_admin') {
+} elseif ($action === 'revoke_admin') {
     $target_id = $_POST['target_user_id'] ?? 0;
 
     // Prevent revoking oneself
@@ -91,8 +93,7 @@ elseif ($action === 'revoke_admin') {
 
     header('Location: ' . $redirect_url);
     exit;
-} 
-else {
+} else {
     $_SESSION['error'] = 'Invalid action requested.';
     header('Location: ' . $redirect_url);
     exit;

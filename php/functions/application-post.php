@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_status'], $_POST[
     $validStatuses = ['Pending', 'Reviewed', 'Shortlisted', 'Hired', 'Rejected'];
     
     if (in_array($newStatus, $validStatuses)) {
-        // Update the status, ensuring the employer actually owns the job this application is for
+        // Update the status, ensuring the employer owns the job this application is for
         $stmt = $db->prepare("
             UPDATE applications 
             SET status = ? 

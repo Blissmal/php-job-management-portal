@@ -4,12 +4,11 @@
  * Sidebar component for authenticated seeker and employer pages
  * Include with: <?php include_once __DIR__ . '/../partials/sidebar.php'; ?>
  *
- * USAGE IN PAGE LAYOUT:
- * Wrap your page content like this (after header & banner):
+ * USAGE IN ADMIN PAGE LAYOUT:
  *
  * <div class="max-w-6xl mx-auto px-4 py-12 flex gap-10">
  *   <?php include_once __DIR__ . '/../partials/sidebar.php'; ?>
- *   <main class="flex-1 min-w-0"> ... your page content ... </main>
+ *   <main class="flex-1 min-w-0">admin content</main>
  * </div>
  */
 

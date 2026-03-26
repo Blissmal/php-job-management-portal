@@ -1,6 +1,5 @@
 <?php
 // ── Live Data ─────────────────────────────────────────────────────────────────
-// Must run BEFORE header (which starts the session and loads connection)
 require_once 'php/config/connection.php';
 
 $id = $_ROUTE['id'] ?? '';

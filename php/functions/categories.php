@@ -8,6 +8,8 @@
 require_once __DIR__ . '/../config/connection.php';
 if (session_status() === PHP_SESSION_NONE) session_start();
 
+
+// 403 Page shown on unauthorized user (Only admin user is allowed)
 if ($_SESSION['role'] !== 'admin') {
     http_response_code(403);
     exit();
@@ -16,6 +18,7 @@ if ($_SESSION['role'] !== 'admin') {
 $action = $_POST['action'] ?? '';
 $db = getDB();
 
+// conditional processing based on the value of action passed from the input in the form
 if ($action === 'create') {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         $_SESSION['error'] = 'Invalid request method.';
