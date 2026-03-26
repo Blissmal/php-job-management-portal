@@ -87,17 +87,14 @@ $totalApplications = $stmt->fetchColumn();
 
 // Status change handler
 $statusMessage = null;
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_status'])) {
-    $newStatus = $_POST['new_status'];
-    $validStatuses = ['Pending', 'Reviewed', 'Shortlisted', 'Hired', 'Rejected'];
-    
-    if (in_array($newStatus, $validStatuses)) {
-        $stmt = $db->prepare("UPDATE applications SET status = ? WHERE app_id = ? AND job_id IN (SELECT job_id FROM jobs WHERE employer_id = ?)");
-        if ($stmt->execute([$newStatus, $app_id, $uid])) {
-            $statusMessage = "Status updated to: <strong>$newStatus</strong>";
-            $app['status'] = $newStatus;
-        }
-    }
+if (isset($_SESSION['statusMessage'])) {
+    $statusMessage = $_SESSION['statusMessage'];
+    unset($_SESSION['statusMessage']);
+}
+$errorMessage = null;
+if (isset($_SESSION['error'])) {
+    $errorMessage = $_SESSION['error'];
+    unset($_SESSION['error']);
 }
 
 include_once 'partials/header.php';
@@ -120,6 +117,13 @@ include_once 'partials/header.php';
 
 <main class="min-h-screen pb-20 bg-slate-50">
     <div class="max-w-6xl mx-auto px-4 py-10">
+
+        <!-- Status Alert -->
+        <?php if ($errorMessage): ?>
+            <div class="bg-red-50 border border-red-200 rounded-xl px-5 py-4 mb-6 flex items-center gap-3">
+                <p class="text-sm text-red-700 font-medium"><?= htmlspecialchars($errorMessage) ?></p>
+            </div>
+        <?php endif; ?>
 
         <!-- Status Alert -->
         <?php if ($statusMessage): ?>
@@ -289,7 +293,8 @@ include_once 'partials/header.php';
                         </div>
 
                         <!-- Status Update Form -->
-                        <form method="POST" class="space-y-3">
+                        <form method="POST" action="/php/functions/application-post.php" class="space-y-3">
+                            <input type="hidden" name="app_id" value="<?= $app_id ?>">
                             <div>
                                 <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Change Status</label>
                                 <select name="new_status" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
