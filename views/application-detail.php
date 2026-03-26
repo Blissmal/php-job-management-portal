@@ -385,16 +385,127 @@ include_once 'partials/header.php';
                     <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">
                         <h3 class="font-bold text-slate-800">Quick Actions</h3>
                     </div>
-                    <div class="p-6 space-y-3">
-                        <button onclick="window.location.href='mailto:<?= htmlspecialchars($app['seeker_email']) ?>';"
-                            class="w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-indigo-600 border-2 border-indigo-200 hover:bg-indigo-50 transition-colors">
-                            Send Email
-                        </button>
+                    <div class="p-6 space-y-4">
+
+                        <!-- Transition Email Section -->
+                        <div>
+                            <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+                                Transition Message
+                            </label>
+                            <select id="transitionMessageSelect"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-3">
+                                <option value="">Select a message template...</option>
+                                <optgroup label="Pending">
+                                    <option
+                                        data-subject="We've received your application — <?= htmlspecialchars($app['job_title']) ?>"
+                                        data-body="Dear <?= htmlspecialchars($app['full_name']) ?>,<?php echo "\n\n"; ?>Thank you for applying for the <?= htmlspecialchars($app['job_title']) ?> position at <?= htmlspecialchars($app['company_name']) ?>. We have received your application and it is currently under review.<?php echo "\n\n"; ?>We will be in touch once we have had a chance to review all applications.<?php echo "\n\n"; ?>Best regards,<?php echo "\n"; ?><?= htmlspecialchars($app['company_name']) ?> Hiring Team">
+                                        Application Received — Under Review
+                                    </option>
+                                </optgroup>
+                                <optgroup label="Reviewed">
+                                    <option
+                                        data-subject="Your application has been reviewed — <?= htmlspecialchars($app['job_title']) ?>"
+                                        data-body="Dear <?= htmlspecialchars($app['full_name']) ?>,<?php echo "\n\n"; ?>We wanted to let you know that we have reviewed your application for the <?= htmlspecialchars($app['job_title']) ?> role at <?= htmlspecialchars($app['company_name']) ?>. Your profile has been noted and we are currently evaluating all candidates.<?php echo "\n\n"; ?>We appreciate your interest and patience.<?php echo "\n\n"; ?>Best regards,<?php echo "\n"; ?><?= htmlspecialchars($app['company_name']) ?> Hiring Team">
+                                        Application Reviewed
+                                    </option>
+                                </optgroup>
+                                <optgroup label="Shortlisted">
+                                    <option
+                                        data-subject="Great news! You've been shortlisted — <?= htmlspecialchars($app['job_title']) ?>"
+                                        data-body="Dear <?= htmlspecialchars($app['full_name']) ?>,<?php echo "\n\n"; ?>We are pleased to inform you that you have been shortlisted for the <?= htmlspecialchars($app['job_title']) ?> position at <?= htmlspecialchars($app['company_name']) ?>. Your skills and experience stood out among our applicants.<?php echo "\n\n"; ?>We will be reaching out shortly to schedule the next steps in our selection process.<?php echo "\n\n"; ?>Best regards,<?php echo "\n"; ?><?= htmlspecialchars($app['company_name']) ?> Hiring Team">
+                                        Shortlisted — Next Steps Coming
+                                    </option>
+                                    <option
+                                        data-subject="Interview Invitation — <?= htmlspecialchars($app['job_title']) ?>"
+                                        data-body="Dear <?= htmlspecialchars($app['full_name']) ?>,<?php echo "\n\n"; ?>Congratulations! After reviewing your application for the <?= htmlspecialchars($app['job_title']) ?> role, we would like to invite you for an interview at <?= htmlspecialchars($app['company_name']) ?>.<?php echo "\n\n"; ?>Please reply to this email with your availability over the next few days so we can schedule a convenient time.<?php echo "\n\n"; ?>We look forward to speaking with you!<?php echo "\n\n"; ?>Best regards,<?php echo "\n"; ?><?= htmlspecialchars($app['company_name']) ?> Hiring Team">
+                                        Shortlisted — Interview Invitation
+                                    </option>
+                                </optgroup>
+                                <optgroup label="Hired">
+                                    <option
+                                        data-subject="Offer of Employment — <?= htmlspecialchars($app['job_title']) ?>"
+                                        data-body="Dear <?= htmlspecialchars($app['full_name']) ?>,<?php echo "\n\n"; ?>We are delighted to offer you the position of <?= htmlspecialchars($app['job_title']) ?> at <?= htmlspecialchars($app['company_name']) ?>. After careful consideration, we believe you are an excellent fit for our team.<?php echo "\n\n"; ?>Please reply to this email to confirm your acceptance, and we will send over the formal offer letter and onboarding details shortly.<?php echo "\n\n"; ?>Welcome to the team!<?php echo "\n\n"; ?>Best regards,<?php echo "\n"; ?><?= htmlspecialchars($app['company_name']) ?> Hiring Team">
+                                        Job Offer — Congratulations
+                                    </option>
+                                </optgroup>
+                                <optgroup label="Rejected">
+                                    <option
+                                        data-subject="Your application update — <?= htmlspecialchars($app['job_title']) ?>"
+                                        data-body="Dear <?= htmlspecialchars($app['full_name']) ?>,<?php echo "\n\n"; ?>Thank you for your interest in the <?= htmlspecialchars($app['job_title']) ?> position at <?= htmlspecialchars($app['company_name']) ?> and for the time you invested in your application.<?php echo "\n\n"; ?>After careful review, we regret to inform you that we will not be moving forward with your application at this time. This was a difficult decision as we received many strong applications.<?php echo "\n\n"; ?>We wish you the very best in your job search and future endeavours.<?php echo "\n\n"; ?>Kind regards,<?php echo "\n"; ?><?= htmlspecialchars($app['company_name']) ?> Hiring Team">
+                                        Application Unsuccessful
+                                    </option>
+                                    <option
+                                        data-subject="Update on your application — <?= htmlspecialchars($app['job_title']) ?>"
+                                        data-body="Dear <?= htmlspecialchars($app['full_name']) ?>,<?php echo "\n\n"; ?>Thank you for applying to <?= htmlspecialchars($app['company_name']) ?> for the <?= htmlspecialchars($app['job_title']) ?> role. We appreciated the opportunity to learn more about your background.<?php echo "\n\n"; ?>At this time, we have decided to move forward with other candidates whose experience more closely aligns with our current needs. We encourage you to keep an eye on our future openings.<?php echo "\n\n"; ?>We wish you success in your search.<?php echo "\n\n"; ?>Kind regards,<?php echo "\n"; ?><?= htmlspecialchars($app['company_name']) ?> Hiring Team">
+                                        Not the Right Fit — Encouragement
+                                    </option>
+                                </optgroup>
+                            </select>
+
+                            <!-- Message Preview -->
+                            <div id="messagePreview" class="hidden mb-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Subject</p>
+                                <p id="previewSubject" class="text-xs text-slate-700 font-medium mb-2"></p>
+                                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Message</p>
+                                <p id="previewBody" class="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap max-h-28 overflow-y-auto"></p>
+                            </div>
+
+                            <button id="sendEmailBtn"
+                                onclick="openMailto()"
+                                disabled
+                                class="w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors border-2 text-slate-400 border-slate-200 bg-slate-50 cursor-not-allowed"
+                                data-email="<?= htmlspecialchars($app['seeker_email']) ?>">
+                                <span class="flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                    Send Email
+                                </span>
+                            </button>
+                        </div>
+
                         <a href="/employer/applications" class="block w-full px-4 py-2.5 rounded-lg text-center text-sm font-semibold text-slate-600 border-2 border-slate-200 hover:bg-slate-50 transition-colors">
                             Back to List
                         </a>
                     </div>
                 </div>
+
+                <script>
+                    const select = document.getElementById('transitionMessageSelect');
+                    const btn = document.getElementById('sendEmailBtn');
+                    const preview = document.getElementById('messagePreview');
+                    const previewSubject = document.getElementById('previewSubject');
+                    const previewBody = document.getElementById('previewBody');
+
+                    select.addEventListener('change', function () {
+                        const opt = this.options[this.selectedIndex];
+                        const subject = opt.getAttribute('data-subject');
+                        const body = opt.getAttribute('data-body');
+
+                        if (subject && body) {
+                            previewSubject.textContent = subject;
+                            previewBody.textContent = body;
+                            preview.classList.remove('hidden');
+
+                            btn.disabled = false;
+                            btn.classList.remove('text-slate-400', 'border-slate-200', 'bg-slate-50', 'cursor-not-allowed');
+                            btn.classList.add('text-indigo-600', 'border-indigo-200', 'hover:bg-indigo-50');
+                        } else {
+                            preview.classList.add('hidden');
+                            btn.disabled = true;
+                            btn.classList.add('text-slate-400', 'border-slate-200', 'bg-slate-50', 'cursor-not-allowed');
+                            btn.classList.remove('text-indigo-600', 'border-indigo-200', 'hover:bg-indigo-50');
+                        }
+                    });
+
+                    function openMailto() {
+                        const opt = select.options[select.selectedIndex];
+                        const email = btn.getAttribute('data-email');
+                        const subject = encodeURIComponent(opt.getAttribute('data-subject') || '');
+                        const body = encodeURIComponent(opt.getAttribute('data-body') || '');
+                        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+                    }
+                </script>
 
             </div>
 
