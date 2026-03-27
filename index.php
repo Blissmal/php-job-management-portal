@@ -70,6 +70,7 @@ function requireEmployerWithProfile(): void
 
 $routes = [
     ['GET',  '/',               'views/home.php',           null],
+    ['GET','/index.php','views/home.php', null],
     ['GET',  '/ping',           'php/functions/ping.php',   null],
     ['GET',  '/dashboard',      null,                       'handleDashboardRedirect'],
     ['GET',  '/jobs',           'views/jobs.php',           null],

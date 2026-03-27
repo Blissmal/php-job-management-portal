@@ -342,217 +342,168 @@ include_once 'partials/header.php';
 
 <!-- ── Markdown Formatter + Preview ── -->
 <script>
-    const textarea = document.getElementById('description');
-    const previewEl = document.getElementById('mdPreview');
-    const previewBtn = document.getElementById('previewBtn');
-    let inPreview = false;
+const textarea = document.getElementById('description');
+const previewEl = document.getElementById('mdPreview');
+const previewBtn = document.getElementById('previewBtn');
+let inPreview = false;
 
-    function fmt(type) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const sel = textarea.value.substring(start, end);
-        let insert = '';
-        const maps = {
-            bold: `**${sel || 'bold text'}**`,
-            italic: `_${sel || 'italic text'}_`,
-            h2: `\n## ${sel || 'Heading'}`,
-            h3: `\n### ${sel || 'Heading'}`,
-            ul: `\n- ${sel || 'List item'}`,
-            ol: `\n1. ${sel || 'List item'}`,
-        };
-        insert = maps[type] || sel;
-        textarea.setRangeText(insert, start, end, 'end');
-        textarea.focus();
+/* ── Toolbar formatter ── */
+function fmt(type) {
+    textarea.focus();
+    const s = textarea.selectionStart, e = textarea.selectionEnd;
+    const sel = textarea.value.substring(s, e);
+    const cur = textarea.value;
+
+    const maps = {
+        bold:   { wrap: ['**', '**'], def: 'bold text' },
+        italic: { wrap: ['_', '_'],   def: 'italic text' },
+        h2:     { prefix: '## ',      def: 'Heading',   newline: true },
+        h3:     { prefix: '### ',     def: 'Heading',   newline: true },
+        ul:     { prefix: '- ',       def: 'List item', newline: true },
+        ol:     { prefix: '1. ',      def: 'List item', newline: true },
+    };
+
+    const m = maps[type];
+    let insert, newStart, newEnd;
+
+    if (m.wrap) {
+        const text = sel || m.def;
+        insert   = m.wrap[0] + text + m.wrap[1];
+        newStart = s + m.wrap[0].length;
+        newEnd   = newStart + text.length;
+    } else {
+        const needsNewline = m.newline && s > 0 && cur[s - 1] !== '\n';
+        const prefix = (needsNewline ? '\n' : '') + m.prefix;
+        const text   = sel || m.def;
+        insert   = prefix + text;
+        newStart = s + prefix.length;
+        newEnd   = newStart + text.length;
     }
 
-    // Minimal markdown → HTML parser (no external lib needed)
-    function parseMarkdown(md) {
-        return md
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') // escape
-            .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-            .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-            .replace(/^# (.+)$/gm, '<h2>$1</h2>')
-            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            .replace(/_(.+?)_/g, '<em>$1</em>')
-            .replace(/^\d+\. (.+)$/gm, '<li class="ol-item">$1</li>')
-            .replace(/^[-*] (.+)$/gm, '<li class="ul-item">$1</li>')
-            .replace(/(<li class="ol-item">.*<\/li>\n?)+/g, m => `<ol>${m.replace(/ class="ol-item"/g,'')}</ol>`)
-            .replace(/(<li class="ul-item">.*<\/li>\n?)+/g, m => `<ul>${m.replace(/ class="ul-item"/g,'')}</ul>`)
-            .replace(/\n{2,}/g, '</p><p>')
-            .replace(/^(?!<[huo]|<p)(.+)$/gm, '<p>$1</p>')
-            .replace(/<p><\/p>/g, '');
-    }
+    textarea.setRangeText(insert, s, e, 'end');
+    textarea.selectionStart = newStart;
+    textarea.selectionEnd   = newEnd;
+}
 
-    function togglePreview() {
-        inPreview = !inPreview;
-        if (inPreview) {
-            previewEl.innerHTML = parseMarkdown(textarea.value) || '<span class="text-slate-400 text-sm italic">Nothing to preview yet…</span>';
-            previewEl.classList.remove('hidden');
-            textarea.classList.add('hidden');
-            previewBtn?.textContent = 'Edit';
-        } else {
-            previewEl.classList.add('hidden');
-            textarea.classList.remove('hidden');
-            previewBtn?.textContent = 'Preview';
-        }
-    }
+/* ── Markdown parser (line-by-line, no double-escaping) ── */
+function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-    // Save draft (just serializes to sessionStorage for now)
-    document.getElementById('draftBtn').addEventListener('click', () => {
-        const data = {};
-        new FormData(document.getElementById('jobForm')).forEach((v, k) => data[k] = v);
-        sessionStorage.setItem('jobDraft', JSON.stringify(data));
-        const btn = document.getElementById('draftBtn');
-        btn?.textContent = '✓ Draft Saved';
-        btn.classList.add('border-[#d5225bc2]', 'text-[#D5225A]');
-        setTimeout(() => {
-            btn?.textContent = 'Save Draft';
-            btn.classList.remove('border-[#d5225bc2]', 'text-[#D5225A]');
-        }, 2000);
-    });
+function inline(s) {
+    return esc(s)
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/__(.+?)__/g,     '<strong>$1</strong>')
+        .replace(/_(.+?)_/g,       '<em>$1</em>')
+        .replace(/\*(.+?)\*/g,     '<em>$1</em>');
+}
 
-    // Restore draft on load
-    window.addEventListener('DOMContentLoaded', () => {
-        const saved = sessionStorage.getItem('jobDraft');
-        if (!saved) return;
-        const data = JSON.parse(saved);
-        Object.entries(data).forEach(([k, v]) => {
-            const el = document.querySelector(`[name="${k}"]`);
-            if (el && el.type !== 'file') el.value = v;
-        });
-    });
+function parseMarkdown(raw) {
+    const lines = raw.split('\n');
+    const out = [];
+    let i = 0;
 
-    // Form submission with validation and error handling
-    document.getElementById('jobForm')?.addEventListener('submit', async function(e) {
-        e.preventDefault();
+    while (i < lines.length) {
+        const line = lines[i];
 
-        const title = document.getElementById('title')?.value?.trim();
-        const description = document.getElementById('description')?.value?.trim();
-        const jobType = document.getElementById('job_type')?.value?.trim();
+        // Headings
+        if (/^### /.test(line)) { out.push('<h3>' + esc(line.slice(4)) + '</h3>'); i++; continue; }
+        if (/^## /.test(line))  { out.push('<h2>' + esc(line.slice(3)) + '</h2>'); i++; continue; }
+        if (/^# /.test(line))   { out.push('<h2>' + esc(line.slice(2)) + '</h2>'); i++; continue; }
 
-        // Client-side validation
-        if (!title) {
-            showError('Job Title is required');
-            return false;
-        }
-
-        if (!description) {
-            showError('Job Description is required');
-            return false;
-        }
-
-        if (!jobType) {
-            showError('Job Type is required');
-            return false;
-        }
-
-        if (description.length < 20) {
-            showError('Job Description must be at least 20 characters');
-            return false;
-        }
-
-        // Show loading state
-        const submitBtn = document.getElementById('submitBtn');
-        const originalText = submitBtn?.textContent;
-        submitBtn.disabled = true;
-        submitBtn?.textContent = 'Posting Job...';
-
-        try {
-            // Submit the form
-            this.submit();
-        } catch (error) {
-            console.error('Form submission error:', error);
-            error_log(JSON.stringify({
-                message: error.message,
-                stack: error.stack,
-                timestamp: new Date().toISOString()
-            }));
-
-            showError('An unexpected error occurred: ' + error.message);
-            submitBtn.disabled = false;
-            submitBtn?.textContent = originalText;
-        }
-    });
-
-    function showError(message) {
-        console.error('Job Form Error:', message);
-
-        // Log to server for debugging
-        fetch('/api/log', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                type: 'job_form_error',
-                message: message,
-                url: window.location.href,
-                timestamp: new Date().toISOString()
-            })
-        }).catch(() => {}); // Silently ignore logging errors
-
-        // Show SweetAlert error
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                text: message,
-                confirmButtonColor: '#d5225a',
-                confirmButtonText: 'OK'
-            });
-        } else {
-            alert('❌ ' + message);
-        }
-    }
-
-    // Check if error alert should trigger SweetAlert
-    // Wait for SweetAlert to load if not already available
-    const waitForSweetAlert = setInterval(() => {
-        if (typeof Swal === 'undefined') return; // Still waiting
-        clearInterval(waitForSweetAlert);
-
-        const errorAlert = document.getElementById('errorAlert');
-        if (errorAlert) {
-            const errorParagraph = errorAlert.querySelector('p');
-            if (errorParagraph && errorParagraph?.textContent) {
-                const errorMsg = errorParagraph?.textContent || 'An error occurred';
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errorMsg,
-                    confirmButtonColor: '#d5225a',
-                    confirmButtonText: 'Go Back to Jobs',
-                    allowOutsideClick: false
-                }).then(result => {
-                    if (result.isConfirmed) {
-                        window.location.href = '/jobs';
-                    }
-                });
-                return; // Exit after showing error
+        // Unordered list — collect consecutive items
+        if (/^[-*] /.test(line)) {
+            const items = [];
+            while (i < lines.length && /^[-*] /.test(lines[i])) {
+                items.push('<li>' + inline(lines[i].slice(2)) + '</li>');
+                i++;
             }
+            out.push('<ul>' + items.join('') + '</ul>');
+            continue;
         }
 
-        // Show success message with redirect
-        const successAlert = document.getElementById('successAlert');
-        if (successAlert) {
-            const successParagraph = successAlert.querySelector('p');
-            if (successParagraph && successParagraph?.textContent) {
-                const successMsg = successParagraph?.textContent || 'Success!';
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: successMsg,
-                    confirmButtonColor: '#2b9a66',
-                    confirmButtonText: 'View Your Job',
-                    allowOutsideClick: false
-                }).then(result => {
-                    if (result.isConfirmed) {
-                        window.location.href = '/employer/jobs';
-                    }
-                });
+        // Ordered list — collect consecutive items
+        if (/^\d+\. /.test(line)) {
+            const items = [];
+            while (i < lines.length && /^\d+\. /.test(lines[i])) {
+                items.push('<li>' + inline(lines[i].replace(/^\d+\. /, '')) + '</li>');
+                i++;
             }
+            out.push('<ol>' + items.join('') + '</ol>');
+            continue;
         }
-    }, 100);
+
+        // Blank line — skip
+        if (line.trim() === '') { i++; continue; }
+
+        // Plain paragraph
+        out.push('<p>' + inline(line) + '</p>');
+        i++;
+    }
+
+    return out.join('\n') || '<span style="color:#94a3b8;font-style:italic;font-size:13px;">Nothing to preview yet…</span>';
+}
+
+/* ── Toggle preview / edit ── */
+function togglePreview() {
+    inPreview = !inPreview;
+    if (inPreview) {
+        previewEl.innerHTML = parseMarkdown(textarea.value);
+        previewEl.classList.remove('hidden');
+        textarea.classList.add('hidden');
+        previewBtn.textContent = 'Edit';
+    } else {
+        previewEl.classList.add('hidden');
+        textarea.classList.remove('hidden');
+        previewBtn.textContent = 'Preview';
+    }
+}
+
+/* ── Save draft ── */
+document.getElementById('draftBtn').addEventListener('click', () => {
+    const data = {};
+    new FormData(document.getElementById('jobForm')).forEach((v, k) => data[k] = v);
+    sessionStorage.setItem('jobDraft', JSON.stringify(data));
+    const btn = document.getElementById('draftBtn');
+    btn.textContent = '✓ Draft Saved';
+    btn.classList.add('border-[#d5225bc2]', 'text-[#D5225A]');
+    setTimeout(() => {
+        btn.textContent = 'Save Draft';
+        btn.classList.remove('border-[#d5225bc2]', 'text-[#D5225A]');
+    }, 2000);
+});
+
+/* ── Restore draft on load ── */
+window.addEventListener('DOMContentLoaded', () => {
+    const saved = sessionStorage.getItem('jobDraft');
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    Object.entries(data).forEach(([k, v]) => {
+        const el = document.querySelector(`[name="${k}"]`);
+        if (el && el.type !== 'file') el.value = v;
+    });
+});
+
+/* ── SweetAlert for flash messages ── */
+const waitForSweetAlert = setInterval(() => {
+    if (typeof Swal === 'undefined') return;
+    clearInterval(waitForSweetAlert);
+
+    const errorAlert = document.getElementById('errorAlert');
+    if (errorAlert) {
+        const msg = errorAlert.querySelector('p')?.textContent || 'An error occurred';
+        Swal.fire({ icon: 'error', title: 'Error', text: msg, confirmButtonColor: '#d5225a', confirmButtonText: 'Go Back to Jobs', allowOutsideClick: false })
+            .then(r => { if (r.isConfirmed) window.location.href = '/jobs'; });
+        return;
+    }
+
+    const successAlert = document.getElementById('successAlert');
+    if (successAlert) {
+        const msg = successAlert.querySelector('p')?.textContent || 'Success!';
+        Swal.fire({ icon: 'success', title: 'Success!', text: msg, confirmButtonColor: '#2b9a66', confirmButtonText: 'View Your Job', allowOutsideClick: false })
+            .then(r => { if (r.isConfirmed) window.location.href = '/employer/jobs'; });
+    }
+}, 100);
 </script>
 
 <?php include_once 'partials/footer.php'; ?>
