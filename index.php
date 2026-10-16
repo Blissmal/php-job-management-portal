@@ -72,6 +72,7 @@ $routes = [
     ['GET',  '/',               'views/home.php',           null],
     ['GET','/index.php','views/home.php', null],
     ['GET',  '/ping',           'php/functions/ping.php',   null],
+    ['OPTIONS', '/ping',        'php/functions/ping.php',   null],
     ['GET',  '/dashboard',      null,                       'handleDashboardRedirect'],
     ['GET',  '/jobs',           'views/jobs.php',           null],
     ['GET',  '/categories',           'views/categories.php',           null],
